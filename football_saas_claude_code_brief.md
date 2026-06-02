@@ -26,7 +26,7 @@ Built for multi-player use (each player has their own account). Parent and Coach
 | Summer Plan (skills + AI feedback) | ✅ Built |
 | Lifelong Journey | ✅ Built |
 | AI API routes (match / season / summer) | ✅ Built |
-| Vercel deployment | 🔄 In progress |
+| Vercel deployment | ✅ Live |
 | @mention Tiptap editor | 🔲 Pending |
 | Parent view / observations | 🔲 Pending |
 | Coach access / invite flow | 🔲 Pending |
@@ -51,11 +51,14 @@ Built for multi-player use (each player has their own account). Parent and Coach
 
 ---
 
-## Repository
+## Repository & Hosting
 
 - **GitHub:** https://github.com/AYDXB09/football-journal
 - **Branch:** main
 - **Auto-deploy:** Vercel connected to GitHub — every push to main deploys
+- **Vercel project:** AY's projects → football-journal
+- **Vercel plan:** Hobby (free)
+- **Live URL:** football-journal-[hash].vercel.app
 
 ---
 
@@ -216,15 +219,26 @@ Each step requires the previous. Managed via modal forms in `/setup`.
 
 ---
 
+## AI Integration Notes
+
+- AI routes built for Anthropic (`claude-sonnet-4-5`) — server-side only
+- Google Gemini blocked in UAE (regional restriction)
+- Groq available as free alternative (no regional restrictions) — `llama-3.3-70b-versatile`
+- Anthropic recommended — $5 credit covers months of usage at this scale
+- `ANTHROPIC_API_KEY` must be set in Vercel environment variables for AI features to work
+- Without the key the app works fully — AI feedback sections just stay empty
+
+---
+
 ## What's Next (Pending)
 
-1. **@mention Tiptap editor** — replace plain textareas in reflections with rich text + teammate mentions
-2. **Parent view** — read-only dashboard + observation entry
-3. **Coach access flow** — invite by email, accept, revoke
-4. **File uploads** — club logos, player avatars via Supabase Storage
-5. **Season selector in header** — global season filter across all pages
-6. **Match detail editing** — edit/delete existing matches
-7. **Vercel production env vars** — add to Vercel dashboard
+1. **Vercel env vars** — add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY` in Vercel dashboard → redeploy
+2. **@mention Tiptap editor** — replace plain textareas in reflections with rich text + teammate mentions
+3. **Parent view** — read-only dashboard + observation entry
+4. **Coach access flow** — invite by email, accept, revoke
+5. **File uploads** — club logos, player avatars via Supabase Storage
+6. **Season selector in header** — global season filter across all pages
+7. **Match detail editing** — edit/delete existing matches
 
 ---
 

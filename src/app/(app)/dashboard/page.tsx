@@ -2,25 +2,28 @@ import { createClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/utils/format'
 import Link from 'next/link'
 
+type MatchRow = { id: string; date: string; opponent: string; result: string | null; goals_for: number | null; goals_against: number | null; overall_rating: number | null; teams?: { team_label: string } | null }
+type GoalRow = { id: string; text: string; target_date: string | null; completed_at: string | null }
+type DiagRow = { id: string; date: string; scores: Record<string, { pct: number; score: number; max: number }> }
+type SeasonRow = { id: string; label: string; is_active: boolean }
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
   // Fetch all data in parallel
-  const [matchesRes, goalsRes, diagnosticsRes, seasonsRes, teamsRes] = await Promise.all([
-    supabase.from('matches').select('*, teams(team_label)').eq('player_id', user.id).order('date', { ascending: false }).limit(5),
-    supabase.from('goals').select('*').eq('player_id', user.id).is('completed_at', null).order('created_at', { ascending: false }).limit(5),
-    supabase.from('diagnostics').select('*').eq('player_id', user.id).order('date', { ascending: false }).limit(1),
-    supabase.from('seasons').select('*').eq('player_id', user.id).order('created_at', { ascending: false }),
-    supabase.from('teams').select('*, clubs(name, logo_url), matches(result)').eq('player_id', user.id),
+  const [matchesRes, goalsRes, diagnosticsRes, seasonsRes] = await Promise.all([
+    supabase.from('matches').select('id, date, opponent, result, goals_for, goals_against, overall_rating, teams(team_label)').eq('player_id', user.id).order('date', { ascending: false }).limit(5),
+    supabase.from('goals').select('id, text, target_date, completed_at').eq('player_id', user.id).is('completed_at', null).order('created_at', { ascending: false }).limit(5),
+    supabase.from('diagnostics').select('id, date, scores').eq('player_id', user.id).order('date', { ascending: false }).limit(1),
+    supabase.from('seasons').select('id, label, is_active').eq('player_id', user.id).order('created_at', { ascending: false }),
   ])
 
-  const matches = matchesRes.data || []
-  const goals = goalsRes.data || []
-  const latestDiag = diagnosticsRes.data?.[0]
-  const seasons = seasonsRes.data || []
-  const teams = teamsRes.data || []
+  const matches = (matchesRes.data || []) as MatchRow[]
+  const goals = (goalsRes.data || []) as GoalRow[]
+  const latestDiag = (diagnosticsRes.data?.[0] || null) as DiagRow | null
+  const seasons = (seasonsRes.data || []) as SeasonRow[]
 
   // Stats
   const totalMatches = matches.length

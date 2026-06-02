@@ -20,10 +20,10 @@ export default async function DashboardPage() {
     supabase.from('seasons').select('id, label, is_active').eq('player_id', user.id).order('created_at', { ascending: false }),
   ])
 
-  const matches = (matchesRes.data || []) as MatchRow[]
-  const goals = (goalsRes.data || []) as GoalRow[]
-  const latestDiag = (diagnosticsRes.data?.[0] || null) as DiagRow | null
-  const seasons = (seasonsRes.data || []) as SeasonRow[]
+  const matches = (matchesRes.data as unknown as MatchRow[]) || []
+  const goals = (goalsRes.data as unknown as GoalRow[]) || []
+  const latestDiag = (diagnosticsRes.data?.[0] as unknown as DiagRow) || null
+  const seasons = (seasonsRes.data as unknown as SeasonRow[]) || []
 
   // Stats
   const totalMatches = matches.length

@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Football Journey</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--accent:#e8ff47;--accent-dim:#b8cc38;--white:#f5f5f0;--muted:#8a9a8e;--card-bg:#162a1f;--surface:#0f1f16;--border:#2a4a35;--danger:#ff5a5a;--warning:#ffb347;--info:#5ac8fa;--cb-color:#5ac8fa;--st-color:#e8ff47;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--surface);color:var(--white);font-family:'DM Sans',sans-serif;font-size:18px;min-height:100vh;overflow-x:hidden;-webkit-text-size-adjust:100%;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,0.015) 40px,rgba(255,255,255,0.015) 80px);pointer-events:none;z-index:0;}
+.app{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:0 16px 80px;}
+.header{padding:20px 0 16px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.header-left h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,8vw,56px);letter-spacing:2px;line-height:1;color:var(--accent);}
+.header-left p{font-size:14px;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;}
+.header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.season-selector{display:flex;align-items:center;gap:8px;}
+.season-select{background:var(--card-bg);border:1px solid var(--accent);color:var(--accent);padding:8px 14px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer;-webkit-appearance:none;min-height:44px;}
+.season-select option{background:var(--card-bg);color:var(--white);}
+.season-label{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:0.5px;text-transform:uppercase;}
+.view-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px 16px;border-radius:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s;min-height:44px;}
+.view-btn.active,.view-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(232,255,71,0.06);}
+.nav-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--card-bg);padding:4px;border-radius:10px;border:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.nav-tabs::-webkit-scrollbar{display:none;}
+.nav-tab{flex:0 0 auto;padding:11px 14px;background:transparent;border:none;color:var(--muted);cursor:pointer;border-radius:7px;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:0.5px;text-transform:uppercase;transition:all 0.2s;white-space:nowrap;min-height:44px;display:flex;align-items:center;justify-content:center;}
+.nav-tab.active{background:var(--accent);color:var(--surface);font-weight:600;}
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;}
+.card-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;margin-bottom:16px;color:var(--white);display:flex;align-items:center;gap:8px;}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--muted);margin-bottom:14px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-group{display:flex;flex-direction:column;gap:7px;}
+.form-group.full{grid-column:1/-1;}
+label{font-size:13px;font-family:'DM Mono',monospace;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);line-height:1.4;}
+input,select,textarea{background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--white);padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:17px;transition:border-color 0.2s;width:100%;-webkit-appearance:none;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+textarea{resize:vertical;min-height:88px;line-height:1.6;}
+select option{background:var(--card-bg);}
+input[type=color]{padding:4px 8px;height:44px;cursor:pointer;}
+input[type=checkbox]{width:22px;height:22px;flex-shrink:0;}
+.ratings-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:4px;}
+.rating-item{display:flex;flex-direction:column;gap:8px;}
+.rating-header{display:flex;justify-content:space-between;align-items:center;}
+.rating-label{font-size:16px;color:var(--white);font-weight:500;}
+.rating-value{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent);min-width:32px;text-align:right;}
+.rating-sublabel{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;}
+input[type=range]{-webkit-appearance:none;height:6px;background:var(--border);border-radius:3px;border:none;padding:0;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;background:var(--accent);border-radius:50%;cursor:pointer;}
+.mood-row{display:flex;gap:10px;flex-wrap:wrap;}
+.mood-btn{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;font-size:24px;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:72px;min-height:72px;justify-content:center;}
+.mood-btn span.mood-label{font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;}
+.mood-btn.selected{border-color:var(--accent);background:rgba(232,255,71,0.08);}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:16px 12px;text-align:center;}
+.stat-number{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--accent);line-height:1;}
+.stat-label{font-size:12px;font-family:'DM Mono',monospace;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+.match-entry{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:border-color 0.2s;display:flex;gap:12px;align-items:center;}
+.match-entry:hover{border-color:var(--accent);}
+.match-date{font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);min-width:72px;}
+.match-teams{flex:1;font-size:16px;font-weight:500;}
+.match-score{font-family:'Bebas Neue',sans-serif;font-size:24px;min-width:46px;text-align:center;}
+.win{color:var(--accent);}.draw{color:var(--warning);}.loss{color:var(--danger);}
+.match-team-badge{font-size:12px;font-family:'DM Mono',monospace;text-transform:uppercase;padding:4px 9px;border-radius:4px;min-width:36px;text-align:center;}
+.badge-pos{background:rgba(232,255,71,0.1);color:var(--accent);border:1px solid rgba(232,255,71,0.25);}
+.match-rating{font-family:'Bebas Neue',sans-serif;font-size:28px;min-width:40px;text-align:right;color:var(--accent);}
+.badge{display:inline-block;font-size:12px;font-family:'DM Mono',monospace;letter-spacing:0.5px;text-transform:uppercase;padding:3px 9px;border-radius:4px;border:1px solid var(--border);color:var(--muted);}
+.submit-btn{width:100%;padding:16px;background:var(--accent);border:none;border-radius:10px;color:var(--surface);font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;transition:all 0.2s;margin-top:20px;}
+.submit-btn:hover{background:var(--accent-dim);transform:translateY(-1px);}
+.btn-sm{background:transparent;border:1px solid var(--border);color:var(--muted);padding:8px 14px;border-radius:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:0.5px;transition:all 0.2s;min-height:40px;}
+.btn-sm:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm.danger:hover{border-color:var(--danger);color:var(--danger);}
+.btn-accent{background:var(--accent);border:none;color:var(--surface);padding:10px 18px;border-radius:8px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;min-height:44px;transition:background 0.2s;}
+.btn-accent:hover{background:var(--accent-dim);}
+.diag-category{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--accent);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.diag-questions{display:flex;flex-direction:column;gap:12px;}
+.diag-q{display:flex;align-items:center;gap:12px;}
+.diag-q-text{font-size:16px;color:var(--white);flex:1;line-height:1.45;}
+.freq-options{display:flex;gap:5px;flex-shrink:0;}
+.freq-btn{width:46px;height:46px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;font-size:12px;font-family:'DM Mono',monospace;transition:all 0.15s;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.2;padding:3px;}
+.freq-btn:hover{border-color:var(--accent);color:var(--accent);}
+.freq-btn.selected{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:600;}
+.pillar-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.pillar-label{font-size:14px;font-family:'DM Mono',monospace;text-transform:uppercase;color:var(--muted);width:110px;flex-shrink:0;}
+.pillar-bar-bg{flex:1;height:8px;background:var(--surface);border-radius:4px;overflow:hidden;border:1px solid var(--border);}
+.pillar-bar-fill{height:100%;border-radius:4px;transition:width 1.2s ease;}
+.pillar-score{font-family:'Bebas Neue',sans-serif;font-size:22px;width:40px;text-align:right;}
+.ai-feedback{background:rgba(232,255,71,0.05);border:1px solid rgba(232,255,71,0.2);border-radius:10px;padding:16px 18px;margin-top:20px;}
+.ai-feedback-header{font-size:13px;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+.ai-feedback-text{font-size:17px;color:var(--white);line-height:1.7;}
+.ai-dot{width:7px;height:7px;background:var(--accent);border-radius:50%;animation:blink 1.2s infinite;display:inline-block;margin:0 2px;}
+.ai-dot:nth-child(2){animation-delay:0.2s;}.ai-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes blink{0%,80%,100%{opacity:0.2;transform:scale(0.8);}40%{opacity:1;transform:scale(1);}}
+.goal-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:14px 16px;margin-bottom:10px;}
+.goal-card-title{font-size:16px;font-weight:600;margin-bottom:6px;line-height:1.4;}
+.goal-card-detail{font-size:14px;color:var(--muted);line-height:1.5;}
+.phase-banner{background:linear-gradient(135deg,rgba(232,255,71,0.12),rgba(255,179,71,0.08));border:1px solid rgba(232,255,71,0.3);border-left:4px solid var(--accent);border-radius:10px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;}
+.phase-banner-icon{font-size:28px;flex-shrink:0;margin-top:2px;}
+.phase-banner-text-wrap{flex:1;min-width:200px;}
+.phase-banner-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;color:var(--accent);margin-bottom:4px;}
+.phase-banner-text{font-size:15px;color:var(--muted);line-height:1.5;}
+.phase-banner-actions{display:flex;gap:8px;flex-wrap:wrap;width:100%;}
+.phase-action-btn{background:var(--accent);border:none;color:var(--surface);padding:11px 18px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;flex:1;text-align:center;min-height:44px;transition:background 0.2s;}
+.phase-action-btn:hover{background:var(--accent-dim);}
+.phase-action-btn.outline{background:transparent;border:1px solid var(--accent);color:var(--accent);}
+.timeline-item{display:flex;gap:14px;margin-bottom:20px;position:relative;}
+.timeline-item::before{content:'';position:absolute;left:9px;top:22px;bottom:-20px;width:2px;background:var(--border);}
+.timeline-item:last-child::before{display:none;}
+.timeline-dot{width:20px;height:20px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:2px;border:3px solid var(--surface);box-shadow:0 0 0 2px var(--accent);}
+.timeline-dot.muted{background:var(--border);box-shadow:0 0 0 2px var(--border);}
+.timeline-body{flex:1;min-width:0;}
+.timeline-date{font-size:12px;font-family:'DM Mono',monospace;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.timeline-title{font-size:16px;font-weight:600;margin-bottom:4px;color:var(--white);}
+.timeline-detail{font-size:14px;color:var(--muted);line-height:1.5;}
+.review-step{display:flex;gap:14px;margin-bottom:4px;}
+.review-step-num{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--border);min-width:32px;line-height:1;padding-top:2px;}
+.review-step-body{flex:1;min-width:0;}
+.review-step-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;color:var(--white);margin-bottom:12px;}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.compare-card{background:var(--surface);border-radius:8px;padding:14px;border:1px solid var(--border);}
+.compare-card-title{font-size:13px;font-family:'DM Mono',monospace;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;}
+.star-rate{display:flex;gap:6px;margin-top:8px;}
+.star-btn{font-size:22px;background:none;border:none;cursor:pointer;opacity:0.3;transition:opacity 0.15s;padding:2px;line-height:1;min-width:32px;min-height:32px;}
+.star-btn.lit{opacity:1;}
+.letter-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;position:relative;}
+.letter-wrap::before{content:'"';position:absolute;top:6px;left:14px;font-size:56px;font-family:'Bebas Neue',sans-serif;color:var(--border);line-height:1;}
+.letter-textarea{background:transparent;border:none;padding-top:44px;font-family:'DM Sans',sans-serif;font-size:17px;line-height:1.8;color:var(--white);width:100%;min-height:180px;resize:vertical;-webkit-appearance:none;}
+.letter-textarea:focus{outline:none;}
+.letter-seal{text-align:center;margin-top:12px;font-size:13px;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+.summer-category{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:18px 16px;margin-bottom:12px;}
+.summer-cat-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;}
+.summer-cat-icon{font-size:24px;flex-shrink:0;}
+.summer-cat-title{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:1.5px;color:var(--white);}
+.summer-cat-desc{font-size:14px;color:var(--muted);margin-top:3px;line-height:1.4;}
+.summer-skill-row{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px;margin-bottom:10px;}
+.summer-skill-row input[type=text]{padding:11px 13px;font-size:16px;}
+.summer-skill-row input[type=number]{width:64px;padding:11px 10px;font-size:16px;text-align:center;}
+.summer-skill-label{font-size:14px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;}
+.remove-skill-btn{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px 6px;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center;border-radius:6px;}
+.remove-skill-btn:hover{color:var(--danger);}
+.add-skill-btn{background:transparent;border:1px dashed var(--border);color:var(--muted);padding:10px 16px;border-radius:8px;cursor:pointer;font-size:15px;font-family:'DM Mono',monospace;transition:all 0.2s;margin-top:6px;min-height:44px;width:100%;text-align:center;}
+.add-skill-btn:hover{border-color:var(--accent);color:var(--accent);}
+.saved-review-card{background:linear-gradient(135deg,rgba(232,255,71,0.06),rgba(52,211,153,0.04));border:1px solid rgba(232,255,71,0.2);border-radius:12px;padding:20px;margin-bottom:20px;}
+.saved-review-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:620px;width:100%;max-height:85vh;overflow-y:auto;position:relative;}
+.modal-close{position:absolute;top:14px;right:14px;background:var(--surface);border:1px solid var(--border);color:var(--muted);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.toast{position:fixed;bottom:24px;right:16px;left:16px;background:var(--accent);color:var(--surface);padding:16px 22px;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1.5px;transform:translateY(100px);opacity:0;transition:all 0.3s;z-index:200;text-align:center;max-width:500px;margin:0 auto;}
+.toast.show{transform:translateY(0);opacity:1;}
+.parent-notice{background:rgba(90,200,250,0.08);border:1px solid rgba(90,200,250,0.25);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:15px;color:var(--info);display:flex;align-items:flex-start;gap:10px;line-height:1.5;}
+.progress-item{margin-bottom:14px;}
+.progress-header{display:flex;justify-content:space-between;margin-bottom:6px;font-size:15px;}
+.progress-bar-bg{height:6px;background:var(--surface);border-radius:3px;overflow:hidden;border:1px solid var(--border);}
+.progress-bar-fill{height:100%;background:var(--accent);border-radius:3px;transition:width 1s ease;}
+.mention-wrap{position:relative;}
+.mention-dropdown{position:absolute;top:calc(100% + 4px);left:0;background:var(--card-bg);border:1px solid var(--accent);border-radius:8px;z-index:50;min-width:220px;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4);display:none;}
+.mention-item{padding:10px 14px;cursor:pointer;font-size:16px;display:flex;align-items:center;gap:10px;transition:background 0.15s;}
+.mention-item:hover{background:rgba(232,255,71,0.1);}
+.mention-item .m-nick{font-weight:600;color:var(--accent);}
+.mention-item .m-pos{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;}
+.mention-chip{display:inline-block;background:rgba(232,255,71,0.15);color:var(--accent);border:1px solid rgba(232,255,71,0.35);border-radius:4px;padding:1px 7px;font-size:15px;font-weight:600;}
+.video-row{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:8px;align-items:start;}
+.video-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.video-tag{font-size:13px;font-family:'DM Mono',monospace;text-transform:uppercase;padding:4px 10px;border-radius:4px;border:1px solid var(--border);color:var(--muted);background:var(--surface);cursor:pointer;transition:all 0.15s;}
+.video-tag.selected{border-color:var(--accent);color:var(--accent);background:rgba(232,255,71,0.08);}
+.pos-row{display:grid;grid-template-columns:1fr 80px 80px auto;gap:10px;margin-bottom:10px;align-items:center;}
+.pos-row select,.pos-row input[type=number]{font-size:16px;padding:10px 12px;}
+.setup-section{margin-bottom:32px;}
+.setup-item{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;}
+.setup-item-logo{width:44px;height:44px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;}
+.setup-item-logo img{width:100%;height:100%;object-fit:cover;border-radius:7px;}
+.setup-item-info{flex:1;min-width:0;}
+.setup-item-name{font-size:17px;font-weight:600;margin-bottom:3px;}
+.setup-item-detail{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:0.3px;}
+.setup-item-actions{display:flex;gap:8px;flex-shrink:0;}
+.kit-swatch{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:inline-block;vertical-align:middle;margin-right:4px;}
+.journey-season-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;cursor:pointer;transition:border-color 0.2s;}
+.journey-season-card:hover{border-color:var(--accent);}
+.journey-season-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
+.journey-season-label{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--accent);}
+.journey-wdl{display:flex;gap:10px;margin-left:auto;}
+.journey-wdl-item{text-align:center;}
+.journey-wdl-num{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;}
+.journey-wdl-label{font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;}
+.journey-letter{font-size:14px;color:var(--muted);line-height:1.6;border-top:1px solid var(--border);padding-top:12px;margin-top:12px;font-style:italic;}
+.career-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+@media(max-width:768px){.form-grid{grid-template-columns:1fr;}.ratings-grid{grid-template-columns:1fr;}.compare-grid{grid-template-columns:1fr;}.diag-q{flex-direction:column;align-items:flex-start;gap:8px;}.freq-options{width:100%;justify-content:space-between;}.freq-btn{flex:1;height:48px;}.stats-grid{grid-template-columns:repeat(2,1fr);}.career-grid{grid-template-columns:repeat(2,1fr);}.pos-row{grid-template-columns:1fr 70px 70px auto;}}
+@media(max-width:480px){.mood-row{display:grid;grid-template-columns:repeat(5,1fr);}.mood-btn{min-width:0;padding:10px 4px;}.summer-skill-row{grid-template-columns:1fr auto auto;}.pos-row{grid-template-columns:1fr 1fr;row-gap:8px;}}
+
+/* ── SETUP MODAL ── */
+.setup-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:none;align-items:center;justify-content:center;padding:16px;}
+.setup-modal-overlay.open{display:flex;}
+.setup-modal{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:28px 24px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;position:relative;box-shadow:0 24px 64px rgba(0,0,0,0.5);}
+.setup-modal-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--accent);margin-bottom:4px;}
+.setup-modal-subtitle{font-size:14px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:20px;}
+.setup-modal-close{position:absolute;top:16px;right:16px;background:var(--surface);border:1px solid var(--border);color:var(--muted);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.setup-modal-close:hover{border-color:var(--danger);color:var(--danger);}
+/* Setup section cards */
+.setup-entity-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 16px;margin-bottom:12px;}
+.setup-entity-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.setup-entity-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;display:flex;align-items:center;gap:10px;}
+.setup-entity-count{font-size:13px;font-family:'DM Mono',monospace;color:var(--muted);padding:3px 10px;border:1px solid var(--border);border-radius:20px;}
+.setup-add-btn{background:var(--accent);border:none;color:var(--surface);padding:9px 16px;border-radius:8px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;white-space:nowrap;transition:background 0.2s;min-height:40px;}
+.setup-add-btn:hover{background:var(--accent-dim);}
+/* Setup item rows */
+.setup-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.setup-row:last-child{border-bottom:none;padding-bottom:0;}
+.setup-row-logo{width:36px;height:36px;border-radius:8px;background:var(--card-bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden;}
+.setup-row-logo img{width:100%;height:100%;object-fit:contain;border-radius:7px;}
+.setup-row-info{flex:1;min-width:0;}
+.setup-row-name{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.setup-row-detail{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.setup-row-actions{display:flex;gap:6px;flex-shrink:0;}
+/* Dependency arrow */
+.setup-dep-arrow{text-align:center;color:var(--muted);font-size:20px;margin:4px 0;line-height:1;}
+/* Gear button in header */
+.header-gear-btn{background:transparent;border:1px solid var(--border);color:var(--muted);width:44px;height:44px;border-radius:8px;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;}
+.header-gear-btn:hover{border-color:var(--accent);color:var(--accent);}
+/* Empty state */
+.setup-empty{text-align:center;padding:20px 0;color:var(--muted);font-size:15px;font-family:'DM Mono',monospace;}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="header">
+  <div class="header-left"><h1>⚽ My Football Journey</h1><p id="playerSubtitle">Player View</p></div>
+  <div class="header-right">
+    <div class="season-selector"><span class="season-label">Season</span><select class="season-select" id="seasonSelect" onchange="onSeasonChange()"><option value="all">All Seasons</option></select></div>
+    <button class="view-btn active" id="btnPlayer" onclick="switchView('player')">Player</button>
+    <button class="view-btn" id="btnParent" onclick="switchView('parent')">Parent</button>
+    <button class="header-gear-btn" onclick="openSetupModal()" title="Setup">⚙️</button>
+  </div>
+</div>
+<div class="nav-tabs" id="mainNav">
+  <button class="nav-tab active" onclick="showTab('dashboard')">Dashboard</button>
+  <button class="nav-tab" onclick="showTab('log')">Log Match</button>
+  <button class="nav-tab" onclick="showTab('training')">Training</button>
+  <button class="nav-tab" onclick="showTab('diagnostic')">Diagnostic</button>
+  <button class="nav-tab" onclick="showTab('history')">Matches</button>
+  <button class="nav-tab" onclick="showTab('goals')">Goals</button>
+  <button class="nav-tab" onclick="showTab('season')" style="color:#ffb347;">⚡ Season</button>
+  <button class="nav-tab" onclick="showTab('summer')" style="color:#5ac8fa;">☀️ Summer</button>
+  <button class="nav-tab" onclick="showTab('journey')" style="color:#c084fc;">🌟 Journey</button>
+  <button class="nav-tab" onclick="showTab('setup')" style="color:#34d399;">⚙ Setup</button>
+</div>
+<!-- DASHBOARD -->
+<div id="tab-dashboard" class="tab-content active">
+  <div class="phase-banner"><div class="phase-banner-icon">🏁</div><div class="phase-banner-text-wrap"><div class="phase-banner-title">End of Season — June 2025</div><div class="phase-banner-text">2–3 matches remaining. Close the season with a full review and set your summer plan.</div></div><div class="phase-banner-actions"><button class="phase-action-btn outline" onclick="showTab('season')">Season Review</button><button class="phase-action-btn" onclick="showTab('summer')">Summer Goals</button></div></div>
+  <div class="stats-grid"><div class="stat-card"><div class="stat-number" id="statMatches">0</div><div class="stat-label">Matches</div></div><div class="stat-card"><div class="stat-number" id="statStreak">0</div><div class="stat-label">Reflect Streak</div></div><div class="stat-card"><div class="stat-number" id="statAvgRating">—</div><div class="stat-label">Avg Rating</div></div><div class="stat-card"><div class="stat-number" id="statWins">—</div><div class="stat-label">Win Rate</div></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;" id="teamDashCards"></div>
+  <div class="section-title">Recent Reflections</div>
+  <div id="dash-recent"></div><div id="diagDashCard"></div><div id="seasonDashSummary"></div>
+</div>
+<!-- LOG MATCH -->
+<div id="tab-log" class="tab-content">
+  <div class="card"><div class="card-title">📅 Match Details</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Date</label><input type="date" id="matchDate"></div>
+      <div class="form-group"><label>Team</label><select id="matchTeam" onchange="onMatchTeamChange()"><option value="">— select team —</option></select></div>
+      <div class="form-group"><label>Competition</label><select id="matchCompetition"><option value="">— select —</option></select></div>
+      <div class="form-group"><label>Stage</label><select id="matchStage"><option value="friendly">Friendly</option><option value="pool">Pool</option><option value="knockout">Knockout</option><option value="group">Group</option><option value="final">Final</option><option value="other">Other</option></select></div>
+      <div class="form-group"><label>Opponent</label><input type="text" id="matchOpponent" placeholder="e.g. Al Nasr Academy"></div>
+      <div class="form-group"><label>Venue</label><select id="matchVenue"><option value="home">Home</option><option value="away">Away</option><option value="neutral">Neutral</option></select></div>
+      <div class="form-group"><label>Our Goals</label><input type="number" id="goalsFor" min="0" max="20" value="0"></div>
+      <div class="form-group"><label>Their Goals</label><input type="number" id="goalsAgainst" min="0" max="20" value="0"></div>
+      <div class="form-group"><label>Total Match Time (mins)</label><input type="number" id="totalMatchMins" min="10" max="120" value="60"></div>
+      <div class="form-group"><label>My Time Played (mins)</label><input type="number" id="minsPlayed" min="0" max="120" value="60"></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">🔢 Positions Played</div>
+    <p style="font-size:15px;color:var(--muted);margin-bottom:14px;">Add each position with time range — split if you changed roles during the match.</p>
+    <div id="positionRows"></div>
+    <button class="add-skill-btn" onclick="addPositionRow()">+ Add Position</button>
+  </div>
+  <div class="card"><div class="card-title">😊 How Did I Feel?</div>
+    <div class="mood-row" id="moodRow">
+      <div class="mood-btn" data-mood="brilliant" onclick="selectMood(this)">🔥<span class="mood-label">Brilliant</span></div>
+      <div class="mood-btn" data-mood="good" onclick="selectMood(this)">😊<span class="mood-label">Good</span></div>
+      <div class="mood-btn" data-mood="ok" onclick="selectMood(this)">😐<span class="mood-label">OK</span></div>
+      <div class="mood-btn" data-mood="tough" onclick="selectMood(this)">😤<span class="mood-label">Tough</span></div>
+      <div class="mood-btn" data-mood="frustrated" onclick="selectMood(this)">😞<span class="mood-label">Frustrated</span></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">📊 Rate My Performance (1–10)</div><div class="ratings-grid" id="ratingsGrid"></div></div>
+  <div class="card"><div class="card-title">💬 My Reflection</div>
+    <div class="form-grid">
+      <div class="form-group full"><label>🌟 One thing I did really well today</label><div class="mention-wrap"><textarea id="reflWell" placeholder="Be specific — what exactly did you do well? Type @ to mention a teammate" oninput="handleMention(this,'mDropWell')"></textarea><div class="mention-dropdown" id="mDropWell"></div></div></div>
+      <div class="form-group full"><label>🎯 One thing I want to improve next time</label><div class="mention-wrap"><textarea id="reflImprove" placeholder="What specific situation could you handle differently?" oninput="handleMention(this,'mDropImprove')"></textarea><div class="mention-dropdown" id="mDropImprove"></div></div></div>
+      <div class="form-group full"><label>🎬 Moment of the Match</label><div class="mention-wrap"><textarea id="reflMoment" placeholder="Describe a specific moment — good or bad. Type @ to mention a teammate" oninput="handleMention(this,'mDropMoment')"></textarea><div class="mention-dropdown" id="mDropMoment"></div></div></div>
+      <div class="form-group full"><label>📋 Coach Feedback</label><textarea id="reflCoach" placeholder="What did the coach say?"></textarea></div>
+    </div>
+    <div class="ai-feedback" id="aiFeedbackBox" style="display:none;"><div class="ai-feedback-header">⚡ Coach AI Feedback</div><div class="ai-feedback-text" id="aiFeedbackText"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div></div>
+  </div>
+  <div class="card"><div class="card-title">🎥 Video Moments</div>
+    <p style="font-size:15px;color:var(--muted);margin-bottom:14px;">Paste links to specific moments — YouTube, Hudl, Google Drive, anything.</p>
+    <div id="videoRows"></div>
+    <button class="add-skill-btn" onclick="addVideoRow()">+ Add Video Moment</button>
+  </div>
+  <button class="submit-btn" onclick="submitMatch()">SAVE MATCH REFLECTION</button>
+</div>
+<!-- TRAINING -->
+<div id="tab-training" class="tab-content">
+  <div class="card"><div class="card-title">🏋️ Training Session</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Date</label><input type="date" id="trainDate"></div>
+      <div class="form-group"><label>Team</label><select id="trainTeam"><option value="">— select team —</option></select></div>
+      <div class="form-group"><label>Duration (mins)</label><input type="number" id="trainDuration" value="60" min="15" max="180"></div>
+      <div class="form-group"><label>Session Type</label><select id="trainType"><option value="technical">Technical</option><option value="tactical">Tactical</option><option value="physical">Physical</option><option value="set_pieces">Set Pieces</option><option value="small_sided">Small Sided Games</option><option value="fitness">Fitness</option><option value="other">Other</option></select></div>
+      <div class="form-group"><label>Coach Led?</label><select id="trainCoachLed"><option value="yes">Yes</option><option value="no">No — solo</option></select></div>
+      <div class="form-group"><label>My Rating (1–10)</label><input type="number" id="trainRating" min="1" max="10" value="7"></div>
+      <div class="form-group full"><label>What We Worked On</label><input type="text" id="trainFocus" placeholder="e.g. Pressing triggers, finishing, set pieces"></div>
+      <div class="form-group full"><label>My Reflection</label><div class="mention-wrap"><textarea id="trainReflection" placeholder="What did you take away? What clicked? What still needs work? Type @ to mention a teammate" oninput="handleMention(this,'mDropTrain')"></textarea><div class="mention-dropdown" id="mDropTrain"></div></div></div>
+    </div>
+  </div>
+  <button class="submit-btn" onclick="submitTraining()">SAVE TRAINING SESSION</button>
+  <div class="section-title" style="margin-top:28px;">Recent Sessions</div>
+  <div id="trainingList"></div>
+</div>
+<!-- DIAGNOSTIC -->
+<div id="tab-diagnostic" class="tab-content">
+  <div class="card" style="margin-bottom:20px;"><p style="font-size:16px;color:var(--muted);line-height:1.6;">Do this every <strong style="color:var(--white)">4–6 weeks</strong>, thinking about your overall experiences across all recent matches. Be honest — this is YOUR data.</p></div>
+  <div id="diagnosticForm"></div>
+  <button class="submit-btn" onclick="submitDiagnostic()">SAVE MY DIAGNOSTIC</button>
+</div>
+<!-- HISTORY -->
+<div id="tab-history" class="tab-content">
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+    <select id="filterTeam" onchange="renderHistory()" style="flex:1;min-width:140px;font-size:16px;padding:10px 12px;"><option value="all">All Teams</option></select>
+    <select id="filterResult" onchange="renderHistory()" style="flex:1;min-width:120px;font-size:16px;padding:10px 12px;"><option value="all">All Results</option><option value="W">Wins</option><option value="D">Draws</option><option value="L">Losses</option></select>
+  </div>
+  <div id="historyList"></div>
+</div>
+<!-- GOALS -->
+<div id="tab-goals" class="tab-content">
+  <div class="card"><div class="card-title">🎯 Add Focus Goal</div>
+    <div class="form-grid">
+      <div class="form-group full"><label>Focus Area (be very specific)</label><input type="text" id="goalText" placeholder='e.g. "When receiving under pressure, take one touch away before looking up"'></div>
+      <div class="form-group full"><label>Why This Matters</label><textarea id="goalWhy" placeholder="In your own words..."></textarea></div>
+      <div class="form-group"><label>Team</label><select id="goalTeam"><option value="both">Both Teams</option></select></div>
+      <div class="form-group"><label>Set By</label><select id="goalSetBy"><option value="me">Me</option><option value="coach">Coach</option><option value="dad">Dad</option></select></div>
+      <div class="form-group"><label>Target Date</label><input type="date" id="goalDate"></div>
+    </div>
+    <button class="submit-btn" onclick="addGoal()" style="margin-top:16px;">ADD FOCUS GOAL</button>
+  </div>
+  <div class="section-title" style="margin-top:24px;">Active Goals</div>
+  <div id="goalsList"></div>
+</div>
+<!-- SEASON REVIEW -->
+<div id="tab-season" class="tab-content">
+  <div id="existingReview"></div>
+  <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,rgba(255,179,71,0.08),rgba(232,255,71,0.04));border-color:rgba(255,179,71,0.25);">
+    <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:28px;">🏁</span><div><div style="font-family:'Bebas Neue';font-size:22px;letter-spacing:2px;color:var(--warning);">Season Closing Review — 2024/25</div><div style="font-size:15px;color:var(--muted);margin-top:3px;">Take 10 minutes. Be honest with yourself.</div></div></div>
+  </div>
+  <div class="card"><div class="review-step"><div class="review-step-num">01</div><div class="review-step-body">
+    <div class="review-step-title">WHAT DID EACH TEAM TEACH ME?</div>
+    <div class="compare-grid">
+      <div class="compare-card"><div class="compare-card-title" style="color:var(--cb-color);">▲ United FC — U9 — Centre Back</div><textarea id="srUnitedLearn" placeholder="Playing CB for a young team — what did you learn?" style="background:transparent;border:none;color:var(--white);width:100%;min-height:90px;font-family:'DM Sans';font-size:16px;line-height:1.6;resize:vertical;"></textarea><div style="font-size:13px;color:var(--muted);font-family:'DM Mono';margin-bottom:6px;text-transform:uppercase;letter-spacing:0.8px;margin-top:10px;">Season rating</div><div class="star-rate" id="stars-united"><button class="star-btn" data-group="united" data-val="1" onclick="rateStar('united',1)">⭐</button><button class="star-btn" data-group="united" data-val="2" onclick="rateStar('united',2)">⭐</button><button class="star-btn" data-group="united" data-val="3" onclick="rateStar('united',3)">⭐</button><button class="star-btn" data-group="united" data-val="4" onclick="rateStar('united',4)">⭐</button><button class="star-btn" data-group="united" data-val="5" onclick="rateStar('united',5)">⭐</button></div></div>
+      <div class="compare-card"><div class="compare-card-title" style="color:var(--st-color);">⚡ Elite FC — U11 — Striker</div><textarea id="srEliteLearn" placeholder="Playing striker against older opponents — what did it force you to improve?" style="background:transparent;border:none;color:var(--white);width:100%;min-height:90px;font-family:'DM Sans';font-size:16px;line-height:1.6;resize:vertical;"></textarea><div style="font-size:13px;color:var(--muted);font-family:'DM Mono';margin-bottom:6px;text-transform:uppercase;letter-spacing:0.8px;margin-top:10px;">Season rating</div><div class="star-rate" id="stars-elite"><button class="star-btn" data-group="elite" data-val="1" onclick="rateStar('elite',1)">⭐</button><button class="star-btn" data-group="elite" data-val="2" onclick="rateStar('elite',2)">⭐</button><button class="star-btn" data-group="elite" data-val="3" onclick="rateStar('elite',3)">⭐</button><button class="star-btn" data-group="elite" data-val="4" onclick="rateStar('elite',4)">⭐</button><button class="star-btn" data-group="elite" data-val="5" onclick="rateStar('elite',5)">⭐</button></div></div>
+    </div>
+  </div></div></div>
+  <div class="card"><div class="review-step"><div class="review-step-num">02</div><div class="review-step-body">
+    <div class="review-step-title">MY BIGGEST GROWTH THIS SEASON</div>
+    <div class="form-grid">
+      <div class="form-group full"><label>What am I most proud of improving?</label><textarea id="srProud" placeholder="Where were you in September vs now?"></textarea></div>
+      <div class="form-group full"><label>Hardest moment — what did I learn from it?</label><textarea id="srHard" placeholder="A tough loss, a bad game, a moment of frustration..."></textarea></div>
+      <div class="form-group full"><label>New skill or quality I have now that I didn't at the start</label><textarea id="srNewSkill" placeholder="Be specific — technical, tactical, or mental..."></textarea></div>
+    </div>
+  </div></div></div>
+  <div class="card"><div class="review-step"><div class="review-step-num">03</div><div class="review-step-body"><div class="review-step-title">HONEST SELF-ASSESSMENT</div><div class="ratings-grid" id="seasonRatings"></div></div></div></div>
+  <div class="card"><div class="review-step"><div class="review-step-num">04</div><div class="review-step-body">
+    <div class="review-step-title">THE GAP — WHERE I NEED TO GROW</div>
+    <div class="form-grid">
+      <div class="form-group full"><label>Biggest gap between where I am and the player I want to become</label><textarea id="srGap" placeholder="Think honestly. What do you see when you watch the professionals you admire?"></textarea></div>
+      <div class="form-group full"><label>What my coaches told me most often this season</label><textarea id="srCoachTheme" placeholder="What kept coming up?"></textarea></div>
+    </div>
+  </div></div></div>
+  <div class="card"><div class="review-step"><div class="review-step-num">05</div><div class="review-step-body">
+    <div class="review-step-title">LETTER TO MYSELF — TO READ IN SEPTEMBER</div>
+    <p style="font-size:15px;color:var(--muted);margin-bottom:14px;">Write to yourself as if you'll open this on the first day back at training.</p>
+    <div class="letter-wrap"><textarea class="letter-textarea" id="srLetter" placeholder="Dear me,&#10;&#10;This season I learned...&#10;&#10;Going into next season, I want to...&#10;&#10;The player I'm becoming is..."></textarea></div>
+    <div class="letter-seal">🔒 Sealed until September 2025</div>
+  </div></div></div>
+  <div class="ai-feedback" id="aiSeasonFeedback" style="display:none;margin-bottom:20px;"><div class="ai-feedback-header">⚡ Season Review — Coach AI Reflection</div><div class="ai-feedback-text" id="aiSeasonText"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div></div>
+  <button class="submit-btn" onclick="submitSeasonReview()" style="background:linear-gradient(135deg,#ffb347,#e8ff47);">SAVE MY SEASON REVIEW</button>
+</div>
+<!-- SUMMER -->
+<div id="tab-summer" class="tab-content">
+  <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,rgba(90,200,250,0.08),rgba(52,211,153,0.04));border-color:rgba(90,200,250,0.25);">
+    <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:32px;">☀️</span><div><div style="font-family:'Bebas Neue';font-size:22px;letter-spacing:2px;color:var(--info);">Summer Training Plan — June to August</div><div style="font-size:15px;color:var(--muted);margin-top:3px;">The players who improve most in summer work with a plan.</div></div></div>
+  </div>
+  <div class="summer-category"><div class="summer-cat-header"><span class="summer-cat-icon">⚽</span><div><div class="summer-cat-title">Technical Skills</div><div class="summer-cat-desc">Specific skills to practise alone with a ball.</div></div></div><div id="techSkills"><div class="summer-skill-row"><input type="text" placeholder='e.g. "Weak foot receiving and passing"' class="summer-skill-input"><input type="number" min="1" max="7" value="3" class="summer-freq-input"><span class="summer-skill-label">×/wk</span><button onclick="removeSkillRow(this)" class="remove-skill-btn">✕</button></div></div><button class="add-skill-btn" onclick="addSkillRow('techSkills')">+ Add skill</button></div>
+  <div class="summer-category"><div class="summer-cat-header"><span class="summer-cat-icon">💪</span><div><div class="summer-cat-title">Physical Development</div><div class="summer-cat-desc">Speed, agility, coordination. Movement quality — not gym work.</div></div></div><div id="physSkills"><div class="summer-skill-row"><input type="text" placeholder='e.g. "Agility ladder — change of direction"' class="summer-skill-input"><input type="number" min="1" max="7" value="2" class="summer-freq-input"><span class="summer-skill-label">×/wk</span><button onclick="removeSkillRow(this)" class="remove-skill-btn">✕</button></div></div><button class="add-skill-btn" onclick="addSkillRow('physSkills')">+ Add activity</button></div>
+  <div class="summer-category"><div class="summer-cat-header"><span class="summer-cat-icon">📺</span><div><div class="summer-cat-title">Watch & Study</div><div class="summer-cat-desc">Pick a player or tactical theme to study each week.</div></div></div><div id="watchSkills"><div class="summer-skill-row"><input type="text" placeholder='e.g. "Study how Haaland makes runs in behind"' class="summer-skill-input"><input type="number" min="1" max="7" value="1" class="summer-freq-input"><span class="summer-skill-label">×/wk</span><button onclick="removeSkillRow(this)" class="remove-skill-btn">✕</button></div></div><button class="add-skill-btn" onclick="addSkillRow('watchSkills')">+ Add study focus</button></div>
+  <div class="card"><div class="card-title">📅 My Weekly Commitment</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Min ball sessions / week</label><select id="summerMinSessions"><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option><option value="6">6</option><option value="7">Every day</option></select></div>
+      <div class="form-group"><label>Minutes per session</label><select id="summerSessionLen"><option value="20">20</option><option value="30" selected>30</option><option value="45">45</option><option value="60">60</option></select></div>
+      <div class="form-group full"><label>🎯 Big Summer Goal</label><textarea id="summerBigGoal" placeholder="The one thing you want to be able to do by September that you cannot do now"></textarea></div>
+      <div class="form-group full"><label>Who will keep me accountable?</label><input type="text" id="summerAccountable" placeholder="e.g. Dad checks in every Sunday"></div>
+    </div>
+  </div>
+  <div class="card" style="border-color:rgba(232,255,71,0.3);background:linear-gradient(135deg,rgba(232,255,71,0.05),transparent);"><div class="card-title">🎽 September Target — Arriving at United U10</div><div class="form-group"><label>In September, I want my coaches and teammates to see me as...</label><textarea id="summerSelfImage" placeholder="Think about your attitude, your role, your technical level..."></textarea></div></div>
+  <div class="ai-feedback" id="aiSummerFeedback" style="display:none;margin-bottom:20px;"><div class="ai-feedback-header">⚡ Summer Plan — Coach AI Review</div><div class="ai-feedback-text" id="aiSummerText"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div></div>
+  <div id="savedSummerPlan"></div>
+  <button class="submit-btn" onclick="submitSummerPlan()" style="background:linear-gradient(135deg,#5ac8fa,#34d399);color:#0f1f16;">SAVE MY SUMMER PLAN</button>
+</div>
+<!-- JOURNEY -->
+<div id="tab-journey" class="tab-content">
+  <div class="card" style="background:linear-gradient(135deg,rgba(192,132,252,0.08),rgba(232,255,71,0.04));border-color:rgba(192,132,252,0.3);margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;"><span style="font-size:36px;">🌟</span><div><div style="font-family:'Bebas Neue';font-size:24px;letter-spacing:2px;color:#c084fc;">My Lifelong Football Journey</div><div style="font-size:15px;color:var(--muted);margin-top:4px;">Every season. Every club. Every step toward the professional game.</div></div></div>
+  </div>
+  <div class="career-grid">
+    <div class="stat-card"><div class="stat-number" id="careerMatches">0</div><div class="stat-label">Career Matches</div></div>
+    <div class="stat-card"><div class="stat-number" id="careerSeasons">0</div><div class="stat-label">Seasons</div></div>
+    <div class="stat-card"><div class="stat-number" id="careerClubs">0</div><div class="stat-label">Clubs</div></div>
+    <div class="stat-card"><div class="stat-number" id="careerWinPct">—</div><div class="stat-label">Career Win %</div></div>
+  </div>
+  <div id="journeyTimeline"></div>
+</div>
+<!-- SETUP TAB -->
+<div id="tab-setup" class="tab-content">
+  <div class="card" style="background:linear-gradient(135deg,rgba(52,211,153,0.08),rgba(232,255,71,0.04));border-color:rgba(52,211,153,0.25);margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-size:32px;">⚙️</span>
+      <div>
+        <div style="font-family:'Bebas Neue';font-size:22px;letter-spacing:2px;color:#34d399;">Setup Your Season</div>
+        <div style="font-size:15px;color:var(--muted);margin-top:3px;">Build your profile in order: Season → Club → Team → Competition → Teammates</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEASON -->
+  <div class="setup-entity-card">
+    <div class="setup-entity-header">
+      <div class="setup-entity-title">📅 Seasons <span class="setup-entity-count" id="countSeasons">0</span></div>
+      <button class="setup-add-btn" onclick="openFormModal('season')">+ Add Season</button>
+    </div>
+    <div id="setupSeasonsList"><div class="setup-empty">No seasons yet</div></div>
+  </div>
+  <div class="setup-dep-arrow">↓</div>
+
+  <!-- CLUBS -->
+  <div class="setup-entity-card">
+    <div class="setup-entity-header">
+      <div class="setup-entity-title">🏆 Clubs <span class="setup-entity-count" id="countClubs">0</span></div>
+      <button class="setup-add-btn" onclick="openFormModal('club')">+ Add Club</button>
+    </div>
+    <div id="setupClubsList"><div class="setup-empty">No clubs yet</div></div>
+  </div>
+  <div class="setup-dep-arrow">↓</div>
+
+  <!-- TEAMS -->
+  <div class="setup-entity-card">
+    <div class="setup-entity-header">
+      <div class="setup-entity-title">⚽ Teams <span class="setup-entity-count" id="countTeams">0</span></div>
+      <button class="setup-add-btn" onclick="openFormModal('team')">+ Add Team</button>
+    </div>
+    <div id="setupTeamsList"><div class="setup-empty">Add a club and season first</div></div>
+  </div>
+  <div class="setup-dep-arrow">↓</div>
+
+  <!-- COMPETITIONS -->
+  <div class="setup-entity-card">
+    <div class="setup-entity-header">
+      <div class="setup-entity-title">🏅 Competitions <span class="setup-entity-count" id="countComps">0</span></div>
+      <button class="setup-add-btn" onclick="openFormModal('competition')">+ Add Competition</button>
+    </div>
+    <div id="setupCompsList"><div class="setup-empty">Add a team first</div></div>
+  </div>
+  <div class="setup-dep-arrow">↓</div>
+
+  <!-- TEAMMATES -->
+  <div class="setup-entity-card">
+    <div class="setup-entity-header">
+      <div class="setup-entity-title">👥 Teammates <span class="setup-entity-count" id="countMates">0</span></div>
+      <button class="setup-add-btn" onclick="openFormModal('teammate')">+ Add Teammate</button>
+    </div>
+    <div id="setupMatesList"><div class="setup-empty">Add a team first</div></div>
+  </div>
+</div>
+
+<!-- SETUP MODAL OVERLAY -->
+<div class="setup-modal-overlay" id="setupModalOverlay" onclick="closeFormModal(event)">
+  <div class="setup-modal">
+    <button class="setup-modal-close" onclick="document.getElementById('setupModalOverlay').classList.remove('open')">✕</button>
+    <div class="setup-modal-title" id="setupModalTitle">Add Season</div>
+    <div class="setup-modal-subtitle" id="setupModalSubtitle">Fill in the details below</div>
+    <div id="setupModalForm"></div>
+  </div>
+</div>
+
+<!-- END ALL TABS -->
+</div><!-- end .app -->
+<!-- MATCH DETAIL MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('modalOverlay').classList.remove('open')">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA LAYER ────────────────────────────────────────────────────
+const DB={save(k,d){try{localStorage.setItem('fj_'+k,JSON.stringify(d));}catch(e){}},load(k,def){try{const d=localStorage.getItem('fj_'+k);return d?JSON.parse(d):def;}catch(e){return def;}}};
+
+let matches=DB.load('matches',[]);
+let trainings=DB.load('trainings',[]);
+let diagnostics=DB.load('diagnostics',[]);
+let goals=DB.load('goals',[]);
+let seasons=DB.load('seasons',[]);
+let clubs=DB.load('clubs',[]);
+let teams=DB.load('teams',[]);
+let competitions=DB.load('competitions',[]);
+let teammates=DB.load('teammates',[]);
+let currentView='player';
+let selectedMood='';
+let activeSeason=DB.load('activeSeason','all');
+let starRatings={united:0,elite:0};
+
+// ── CONSTANTS ─────────────────────────────────────────────────────
+const ALL_POSITIONS=['GK','CB','LB','RB','LWB','RWB','CDM','CM','CAM','LM','RM','LW','RW','SS','ST'];
+const DIMENSIONS={
+  'CB':[{id:'distribution',label:'Distribution',sub:'Passing out from the back'},{id:'positioning',label:'Positioning',sub:'Reading the game'},{id:'leadership',label:'Leadership',sub:'Organising the team'},{id:'defending',label:'Defending',sub:'Tackles, headers, blocks'},{id:'composure',label:'Composure',sub:'Calm under pressure'},{id:'effort',label:'Effort',sub:'Work rate & intensity'}],
+  'ST':[{id:'movement',label:'Movement',sub:'Runs in behind, creating space'},{id:'firstTouch',label:'First Touch',sub:'Controlling fast balls'},{id:'decisionSpeed',label:'Decision Speed',sub:'Quick passing or holding'},{id:'pressing',label:'Pressing',sub:'Hunting the ball high up'},{id:'composure',label:'Composure',sub:'Calm under pressure'},{id:'effort',label:'Effort',sub:'Work rate & intensity'}],
+  'default':[{id:'technical',label:'Technical Quality',sub:'Ball control & passing'},{id:'tactical',label:'Tactical Awareness',sub:'Reading the game'},{id:'physical',label:'Physical Effort',sub:'Work rate & intensity'},{id:'composure',label:'Composure',sub:'Calm under pressure'},{id:'decision',label:'Decision Making',sub:'Speed and quality of choices'},{id:'effort',label:'Effort',sub:'Overall effort level'}]
+};
+const DIAG_CATEGORIES=[
+  {title:'Technical — Ball Control & Passing',color:'#5ac8fa',questions:['I decide what to do with the ball before it reaches me','My passes go exactly where I want them to go','I control the ball quickly when it arrives under pressure','I use my weaker foot comfortably, not just my stronger one','I can play a 1-2 and use overlaps during a game']},
+  {title:'Technical — Shooting & Dribbling',color:'#e8ff47',questions:['I dribble past opponents successfully','My shots go on target when I shoot','I score or come close to scoring when I get chances','I use tricks or skills to beat a defender','I shoot with my weaker foot when I need to']},
+  {title:'Tactical — In Possession',color:'#ff9f5a',questions:['I find teammates to pass to in more than one direction','I run into spaces to receive the ball','I create goal-scoring chances for my team','I know when to hold the ball and when to release it quickly','I make the right decisions when the game is fast']},
+  {title:'Tactical — Out of Possession',color:'#ff6b6b',questions:['I win the ball back quickly when my team loses it','I press the opponent as soon as we lose the ball','I get into the right position to cover my teammates','I anticipate where the ball will go next','I stop opponents from dribbling past me']},
+  {title:'Mental & Attitude',color:'#c084fc',questions:['If I make a mistake, I quickly recover and move on','I stay focused and concentrated for the whole game','I try new things in games even if I might make a mistake','I listen to my coach and follow their feedback','I encourage my teammates, especially when things are hard','I stay calm and focused in important or difficult games']},
+  {title:'Development Habits',color:'#34d399',questions:['I practise with a ball on my own between sessions','I watch professional footballers and study how they play','I set targets for myself to improve specific skills','I think about how I can improve even when not playing','I accept critical feedback and try to use it to improve']}
+];
+const FREQ_LABELS=['Never','Rarely','Sometimes','Often','Always'];
+const SEASON_DIMS=[
+  {id:'sr_technical',label:'Technical Quality',sub:'Ball control, passing, shooting'},
+  {id:'sr_tactical',label:'Tactical Awareness',sub:'Reading the game, positioning'},
+  {id:'sr_mental',label:'Mental Strength',sub:'Composure, resilience, focus'},
+  {id:'sr_effort',label:'Effort & Attitude',sub:'Work rate, coachability'},
+  {id:'sr_leadership',label:'Leadership',sub:'Organising, encouraging teammates'},
+  {id:'sr_decision',label:'Decision Making',sub:'Speed and quality of choices'}
+];
+const MOMENT_TYPES=['highlight','learning','error','goal','assist'];
+
+// ── INIT ──────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('matchDate').value=today();
+  document.getElementById('trainDate').value=today();
+  document.getElementById('goalDate').value=daysFromNow(30);
+  renderSeasonRatings();
+  buildDiagnosticForm();
+  populateSeasonSelector();
+  populateSetupSelects();
+  renderSetupLists();
+  renderHistory();
+  renderGoals();
+  renderTrainingList();
+  renderJourney();
+  refreshDashboard();
+  addPositionRow();
+  addVideoRow();
+  loadExistingReview();
+  loadSummerPlan();
+  refreshTeamDropdowns();
+});
+function today(){return new Date().toISOString().split('T')[0];}
+function daysFromNow(n){return new Date(Date.now()+n*864e5).toISOString().split('T')[0];}
+function formatDate(d){if(!d)return '?';const dt=new Date(d+'T00:00:00');const day=String(dt.getDate()).padStart(2,'0');const mon=dt.toLocaleDateString('en-GB',{month:'short'});const yr=dt.getFullYear();return `${day}-${mon}-${yr}`;}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+
+// ── TABS ──────────────────────────────────────────────────────────
+const TAB_ORDER=['dashboard','log','training','diagnostic','history','goals','season','summer','journey','setup'];
+function showTab(name){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  const tab=document.getElementById('tab-'+name);
+  if(tab) tab.classList.add('active');
+  const i=TAB_ORDER.indexOf(name);
+  if(i>=0) document.querySelectorAll('.nav-tab')[i].classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── VIEW ──────────────────────────────────────────────────────────
+function switchView(v){
+  currentView=v;
+  document.getElementById('btnPlayer').classList.toggle('active',v==='player');
+  document.getElementById('btnParent').classList.toggle('active',v==='parent');
+  document.getElementById('playerSubtitle').textContent=v==='parent'?'Parent View — Development Overview':'Player View — Personal Development Journal';
+  refreshDashboard();
+}
+
+// ── SEASON SELECTOR ───────────────────────────────────────────────
+function populateSeasonSelector(){
+  const sel=document.getElementById('seasonSelect');
+  const prev=sel.value;
+  sel.innerHTML='<option value="all">All Seasons</option>';
+  seasons.forEach(s=>{
+    const o=document.createElement('option');
+    o.value=s.id;o.textContent=s.label;
+    if(s.id===activeSeason) o.selected=true;
+    sel.appendChild(o);
+  });
+  if(!activeSeason||(!seasons.find(s=>s.id===activeSeason)&&activeSeason!=='all')) activeSeason='all';
+}
+function onSeasonChange(){
+  activeSeason=document.getElementById('seasonSelect').value;
+  DB.save('activeSeason',activeSeason);
+  refreshDashboard();renderHistory();renderGoals();renderTrainingList();refreshTeamDropdowns();
+}
+function filteredMatches(){
+  if(activeSeason==='all') return matches;
+  return matches.filter(m=>m.seasonId===activeSeason);
+}
+
+// ── POSITION ROWS ─────────────────────────────────────────────────
+function addPositionRow(){
+  const c=document.getElementById('positionRows');
+  const row=document.createElement('div');
+  row.className='pos-row';
+  row.innerHTML=`<select class="pos-select" onchange="updateRatingsForPosition()" style="font-size:17px;padding:10px 12px;">${ALL_POSITIONS.map(p=>`<option value="${p}">${p}</option>`).join('')}</select><input type="number" placeholder="From" min="0" max="120" class="pos-from" title="From minute" style="font-size:16px;padding:10px 12px;"><input type="number" placeholder="To" min="0" max="120" class="pos-to" title="To minute" style="font-size:16px;padding:10px 12px;"><button class="remove-skill-btn" onclick="this.closest('.pos-row').remove()">✕</button>`;
+  c.appendChild(row);
+  updateRatingsForPosition();
+}
+function updateRatingsForPosition(){
+  const rows=document.querySelectorAll('.pos-row');
+  const firstPos=rows.length?rows[0].querySelector('.pos-select').value:'default';
+  renderRatings(firstPos);
+}
+function getPositions(){
+  return Array.from(document.querySelectorAll('.pos-row')).map(r=>({position:r.querySelector('.pos-select').value,from:r.querySelector('.pos-from').value,to:r.querySelector('.pos-to').value})).filter(p=>p.position);
+}
+
+// ── RATINGS ───────────────────────────────────────────────────────
+function renderRatings(pos){
+  const dims=DIMENSIONS[pos]||DIMENSIONS['default'];
+  document.getElementById('ratingsGrid').innerHTML=dims.map(d=>`<div class="rating-item"><div class="rating-header"><div><div class="rating-label">${d.label}</div><div class="rating-sublabel">${d.sub}</div></div><div class="rating-value" id="rv_${d.id}">5</div></div><input type="range" min="1" max="10" value="5" id="r_${d.id}" oninput="document.getElementById('rv_${d.id}').textContent=this.value"></div>`).join('');
+}
+function renderSeasonRatings(){
+  const g=document.getElementById('seasonRatings');
+  if(!g) return;
+  g.innerHTML=SEASON_DIMS.map(d=>`<div class="rating-item"><div class="rating-header"><div><div class="rating-label">${d.label}</div><div class="rating-sublabel">${d.sub}</div></div><div class="rating-value" id="srv_${d.id}">5</div></div><input type="range" min="1" max="10" value="5" id="${d.id}" oninput="document.getElementById('srv_${d.id}').textContent=this.value"></div>`).join('');
+}
+function getRatings(pos){
+  const dims=DIMENSIONS[pos]||DIMENSIONS['default'];
+  const ratings={};
+  dims.forEach(d=>{const el=document.getElementById('r_'+d.id);if(el) ratings[d.id]=parseInt(el.value);});
+  return ratings;
+}
+
+// ── VIDEO ROWS ────────────────────────────────────────────────────
+function addVideoRow(){
+  const c=document.getElementById('videoRows');
+  const row=document.createElement('div');
+  row.style.cssText='margin-bottom:14px;border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--surface);';
+  row.innerHTML=`<div class="video-row"><input type="url" placeholder="Paste video URL (YouTube, Hudl, Drive...)" class="vid-url" style="font-size:16px;"><button class="remove-skill-btn" onclick="this.closest('div').parentElement.remove()">✕</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;"><input type="text" placeholder="Timestamp (e.g. 2:14)" class="vid-ts" style="font-size:16px;"><input type="text" placeholder="Label (e.g. Blocked cross / Wrong pass)" class="vid-label" style="font-size:16px;"></div><div class="video-tags">${MOMENT_TYPES.map(t=>`<button class="video-tag" data-type="${t}" onclick="toggleVideoTag(this)">${t}</button>`).join('')}</div>`;
+  c.appendChild(row);
+}
+function toggleVideoTag(el){el.closest('.video-tags').querySelectorAll('.video-tag').forEach(b=>b.classList.remove('selected'));el.classList.toggle('selected');}
+function getVideoMoments(){
+  return Array.from(document.getElementById('videoRows').children).map(row=>{
+    const url=row.querySelector('.vid-url')?.value.trim();
+    if(!url) return null;
+    const sel=row.querySelector('.video-tag.selected');
+    return {url,timestamp:row.querySelector('.vid-ts')?.value||'',label:row.querySelector('.vid-label')?.value||'',type:sel?sel.dataset.type:''};
+  }).filter(Boolean);
+}
+
+// ── @MENTIONS ─────────────────────────────────────────────────────
+function getTeammatesForSeason(){
+  if(activeSeason==='all') return teammates;
+  const sTeams=teams.filter(t=>t.seasonId===activeSeason).map(t=>t.id);
+  return teammates.filter(m=>sTeams.includes(m.teamId));
+}
+function handleMention(textarea,dropId){
+  const val=textarea.value,pos=textarea.selectionStart;
+  const atIdx=val.lastIndexOf('@',pos-1);
+  const drop=document.getElementById(dropId);
+  if(atIdx>=0&&pos-atIdx<=25){
+    const query=val.slice(atIdx+1,pos).toLowerCase();
+    const found=getTeammatesForSeason().filter(m=>(m.nickname||m.name||'').toLowerCase().startsWith(query));
+    if(found.length){
+      drop.style.display='block';
+      drop.innerHTML=found.map(m=>`<div class="mention-item" onclick="insertMention(event,'${textarea.id}','${dropId}',${atIdx},${pos},'${(m.nickname||m.name).replace(/'/g,"\\'")}')"><span class="m-nick">@${m.nickname||m.name}</span><span class="m-pos">${(m.positions||[]).join(', ')}</span></div>`).join('');
+      return;
+    }
+  }
+  drop.style.display='none';
+}
+function insertMention(e,fieldId,dropId,atIdx,pos,nick){
+  e.preventDefault();e.stopPropagation();
+  const ta=document.getElementById(fieldId);
+  ta.value=ta.value.slice(0,atIdx)+'@'+nick+' '+ta.value.slice(pos);
+  document.getElementById(dropId).style.display='none';
+  ta.focus();
+}
+function renderMentionChips(text){
+  if(!text) return '';
+  return text.replace(/@(\w+)/g,(match,nick)=>{
+    const tm=teammates.find(m=>(m.nickname||'').toLowerCase()===nick.toLowerCase()||(m.name||'').split(' ')[0].toLowerCase()===nick.toLowerCase());
+    return tm?`<span class="mention-chip">@${tm.nickname||tm.name}</span>`:match;
+  });
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.mention-wrap')) document.querySelectorAll('.mention-dropdown').forEach(d=>d.style.display='none');
+});
+// ── MOOD ─────────────────────────────────────────────────────────
+function selectMood(el){document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');selectedMood=el.dataset.mood;}
+
+// ── MATCH TEAM CHANGE ─────────────────────────────────────────────
+function onMatchTeamChange(){
+  const teamId=document.getElementById('matchTeam').value;
+  const sel=document.getElementById('matchCompetition');
+  sel.innerHTML='<option value="">— select —</option>';
+  competitions.filter(c=>c.teamId===teamId).forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o);});
+}
+
+// ── SUBMIT MATCH ──────────────────────────────────────────────────
+async function submitMatch(){
+  const reflWell=document.getElementById('reflWell').value.trim();
+  const reflImprove=document.getElementById('reflImprove').value.trim();
+  if(!reflWell||!reflImprove){showToast('Fill in at least the two reflection fields!');return;}
+  const teamId=document.getElementById('matchTeam').value;
+  const team=teams.find(t=>t.id===teamId);
+  const positions=getPositions();
+  const primaryPos=positions.length?positions[0].position:'default';
+  const ratings=getRatings(primaryPos);
+  const vals=Object.values(ratings);
+  const avgRating=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):'5.0';
+  const gf=parseInt(document.getElementById('goalsFor').value)||0;
+  const ga=parseInt(document.getElementById('goalsAgainst').value)||0;
+  const match={
+    id:uid(),
+    date:document.getElementById('matchDate').value,
+    seasonId:activeSeason!=='all'?activeSeason:(seasons.find(s=>s.isActive)||seasons[0]||{id:''}).id,
+    teamId,teamLabel:team?team.label:'',
+    competitionId:document.getElementById('matchCompetition').value,
+    stage:document.getElementById('matchStage').value,
+    opponent:document.getElementById('matchOpponent').value.trim()||'Unknown',
+    venue:document.getElementById('matchVenue').value,
+    result:gf>ga?'W':gf<ga?'L':'D',
+    goalsFor:gf,goalsAgainst:ga,
+    totalMins:parseInt(document.getElementById('totalMatchMins').value)||60,
+    minsPlayed:parseInt(document.getElementById('minsPlayed').value)||60,
+    positions,mood:selectedMood||'ok',ratings,avgRating:parseFloat(avgRating),
+    reflWell:document.getElementById('reflWell').value.trim(),
+    reflImprove:document.getElementById('reflImprove').value.trim(),
+    reflMoment:document.getElementById('reflMoment').value.trim(),
+    reflCoach:document.getElementById('reflCoach').value.trim(),
+    videoMoments:getVideoMoments(),aiFeedback:''
+  };
+  matches.unshift(match);DB.save('matches',matches);
+  const fb=document.getElementById('aiFeedbackBox');const ft=document.getElementById('aiFeedbackText');
+  fb.style.display='block';ft.innerHTML='<div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>';
+  const posLabel=positions.map(p=>p.position+(p.from?` (${p.from}'–${p.to||'?'}')`:'')).join(', ')||'unspecified position';
+  const ratStr=Object.entries(ratings).map(([k,v])=>`${k.replace(/([A-Z])/g,' $1')}:${v}/10`).join(', ');
+  const prompt=`You are a supportive football development coach giving feedback to a 9-year-old aspiring professional footballer. He played a competitive match for ${match.teamLabel||'his team'} (${match.stage} stage). Positions: ${posLabel}. Result: ${match.result==='W'?'a win':match.result==='D'?'a draw':'a loss'} (${match.goalsFor}–${match.goalsAgainst}). Minutes: ${match.minsPlayed} of ${match.totalMins}.\n\nHis reflection:\n- Did well: "${match.reflWell}"\n- Improve: "${match.reflImprove}"\n- Key moment: "${match.reflMoment||'not noted'}"\n- Coach said: "${match.reflCoach||'not noted'}"\nRatings: ${ratStr}\n\nWrite 3–4 sentences of warm, growth-focused feedback. Reference his specifics. Use proper football terminology — he has a high football IQ. Celebrate positives first, then one concrete development suggestion. End with something inspiring for next time. No bullet points — natural coach voice.`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const feedback=data.content?.[0]?.text||'Great reflection — every match you analyse like this makes you smarter as a footballer.';
+    matches[0].aiFeedback=feedback;DB.save('matches',matches);ft.textContent=feedback;
+  }catch(e){ft.textContent='Solid reflection logged. Every match you break down like this builds your football intelligence.';}
+  showToast('Match saved! ✅');refreshDashboard();renderHistory();
+  setTimeout(()=>{
+    ['matchOpponent','reflWell','reflImprove','reflMoment','reflCoach'].forEach(id=>{const el=document.getElementById(id);if(el) el.value='';});
+    document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
+    selectedMood='';fb.style.display='none';
+    document.getElementById('positionRows').innerHTML='';addPositionRow();
+    document.getElementById('videoRows').innerHTML='';addVideoRow();
+  },4000);
+}
+
+// ── SUBMIT TRAINING ───────────────────────────────────────────────
+function submitTraining(){
+  const reflection=document.getElementById('trainReflection').value.trim();
+  if(!reflection){showToast('Add a reflection before saving!');return;}
+  const teamId=document.getElementById('trainTeam').value;
+  const team=teams.find(t=>t.id===teamId);
+  const session={id:uid(),date:document.getElementById('trainDate').value,seasonId:activeSeason!=='all'?activeSeason:(seasons.find(s=>s.isActive)||seasons[0]||{id:''}).id,teamId,teamLabel:team?team.label:'',duration:parseInt(document.getElementById('trainDuration').value)||60,type:document.getElementById('trainType').value,coachLed:document.getElementById('trainCoachLed').value==='yes',rating:parseInt(document.getElementById('trainRating').value)||7,focus:document.getElementById('trainFocus').value.trim(),reflection};
+  trainings.unshift(session);DB.save('trainings',trainings);
+  showToast('Training session saved! 💪');
+  document.getElementById('trainReflection').value='';document.getElementById('trainFocus').value='';
+  renderTrainingList();
+}
+function renderTrainingList(){
+  const el=document.getElementById('trainingList');
+  if(!el) return;
+  const ft=activeSeason==='all'?trainings:trainings.filter(t=>t.seasonId===activeSeason);
+  el.innerHTML=ft.slice(0,10).map(s=>`<div class="match-entry" style="cursor:default;"><div class="match-date">${formatDate(s.date)}</div><div class="match-team-badge badge-pos">${s.type.replace('_',' ')}</div><div class="match-teams" style="flex:1;">${s.teamLabel||'—'} · ${s.focus||'General session'}</div><div class="match-rating">${s.rating}/10</div></div>`).join('')||'<div style="color:var(--muted);padding:16px 0;font-size:16px;">No training sessions yet.</div>';
+}
+
+// ── DIAGNOSTIC ────────────────────────────────────────────────────
+function buildDiagnosticForm(){
+  document.getElementById('diagnosticForm').innerHTML=DIAG_CATEGORIES.map((cat,ci)=>`<div class="card" style="margin-bottom:16px;"><div class="diag-category" style="color:${cat.color}">${cat.title}</div><div class="diag-questions">${cat.questions.map((q,qi)=>`<div class="diag-q"><div class="diag-q-text">${q}</div><div class="freq-options">${FREQ_LABELS.map((lbl,fi)=>`<button class="freq-btn" data-cat="${ci}" data-q="${qi}" data-val="${fi}" onclick="selectFreq(this,${ci},${qi})">${lbl.slice(0,3)}</button>`).join('')}</div></div>`).join('')}</div></div>`).join('');
+}
+function selectFreq(el,ci,qi){document.querySelectorAll(`[data-cat="${ci}"][data-q="${qi}"]`).forEach(b=>b.classList.remove('selected'));el.classList.add('selected');}
+function submitDiagnostic(){
+  let unanswered=0;
+  DIAG_CATEGORIES.forEach((cat,ci)=>{
+    cat.questions.forEach((_,qi)=>{if(!document.querySelector(`[data-cat="${ci}"][data-q="${qi}"].selected`)) unanswered++;});
+  });
+  if(unanswered>0){
+    if(!confirm(`${unanswered} question${unanswered>1?'s are':' is'} unanswered. Save anyway?`)) return;
+  }
+  const scores={};
+  DIAG_CATEGORIES.forEach((cat,ci)=>{
+    let total=0,answered=0;
+    cat.questions.forEach((_,qi)=>{const sel=document.querySelector(`[data-cat="${ci}"][data-q="${qi}"].selected`);if(sel){total+=parseInt(sel.dataset.val);answered++;}});
+    const max=cat.questions.length*4;
+    scores[cat.title]={score:total,max,pct:answered>0?Math.round(total/(answered*4)*100):0,answered,total:cat.questions.length};
+  });
+  diagnostics.unshift({id:uid(),date:today(),seasonId:activeSeason,scores});
+  DB.save('diagnostics',diagnostics);showToast('Diagnostic saved! 📊');showTab('dashboard');refreshDashboard();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────
+function refreshDashboard(){
+  const fm=filteredMatches();
+  const wins=fm.filter(m=>m.result==='W').length;
+  document.getElementById('statMatches').textContent=fm.length;
+  document.getElementById('statStreak').textContent=calcStreak();
+  document.getElementById('statAvgRating').textContent=fm.length?(fm.reduce((a,b)=>a+(b.avgRating||0),0)/fm.length).toFixed(1):'—';
+  document.getElementById('statWins').textContent=fm.length?Math.round(wins/fm.length*100)+'%':'—';
+  // Team cards
+  const teamCards=document.getElementById('teamDashCards');
+  const activeTeams=activeSeason==='all'?teams:teams.filter(t=>t.seasonId===activeSeason);
+  if(!activeTeams.length){
+    teamCards.innerHTML='<div style="grid-column:1/-1;color:var(--muted);font-size:16px;text-align:center;padding:20px 0;border:1px dashed var(--border);border-radius:10px;">No teams set up. Go to <span onclick="showTab(\'setup\')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">⚙ Setup</span> to add your first team.</div>';
+  } else {
+    teamCards.innerHTML=activeTeams.slice(0,4).map(team=>{
+      const tm=fm.filter(m=>m.teamId===team.id);
+      const club=clubs.find(c=>c.id===team.clubId);
+      const w=tm.filter(m=>m.result==='W').length,d=tm.filter(m=>m.result==='D').length,l=tm.filter(m=>m.result==='L').length;
+      const avg=tm.length?(tm.reduce((a,b)=>a+(b.avgRating||0),0)/tm.length).toFixed(1):'—';
+      const logoHtml=club&&club.logo?`<img src="${club.logo}" style="width:36px;height:36px;border-radius:8px;object-fit:contain;" onerror="this.style.display='none'">`:'⚽';
+      return `<div class="card" style="margin-bottom:0;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><div style="width:40px;height:40px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0;">${logoHtml}</div><div><div style="font-family:'Bebas Neue';font-size:18px;letter-spacing:1px;">${team.label}</div><div style="font-size:13px;color:var(--muted);font-family:'DM Mono';">${tm.length} match${tm.length!==1?'es':''}</div></div></div><div style="display:flex;justify-content:space-around;text-align:center;"><div><div style="font-family:'Bebas Neue';font-size:26px;color:var(--accent);">${w}</div><div style="font-size:12px;color:var(--muted);font-family:'DM Mono';">W</div></div><div><div style="font-family:'Bebas Neue';font-size:26px;color:var(--warning);">${d}</div><div style="font-size:12px;color:var(--muted);font-family:'DM Mono';">D</div></div><div><div style="font-family:'Bebas Neue';font-size:26px;color:var(--danger);">${l}</div><div style="font-size:12px;color:var(--muted);font-family:'DM Mono';">L</div></div><div><div style="font-family:'Bebas Neue';font-size:26px;color:var(--accent);">${avg}</div><div style="font-size:12px;color:var(--muted);font-family:'DM Mono';">Avg</div></div></div></div>`;
+    }).join('');
+  }
+  // Recent matches
+  const recentEl=document.getElementById('dash-recent');
+  recentEl.innerHTML=fm.length?fm.slice(0,3).map(m=>matchEntryHTML(m)).join(''):`<div class="card" style="text-align:center;padding:32px;"><div style="font-size:44px;margin-bottom:14px;">📋</div><div style="color:var(--muted);font-size:17px;">No matches logged yet. Head to <strong style="color:var(--accent)">Log Match</strong> after your next game!</div></div>`;
+  // Diagnostic bars
+  const diagCard=document.getElementById('diagDashCard');
+  if(diagnostics.length){
+    const latest=diagnostics[0];
+    const pc=['#5ac8fa','#e8ff47','#ff9f5a','#ff6b6b','#c084fc','#34d399'];
+    diagCard.innerHTML=`<div class="card" style="margin-top:4px;"><div class="card-title">📈 Latest Diagnostic — ${latest.date}</div>${Object.entries(latest.scores).map(([title,data],i)=>`<div class="pillar-row"><div class="pillar-label">${title.split('—')[0].trim().replace('Technical ','').replace('Tactical ','').replace('Development','Dev').substring(0,14)}</div><div class="pillar-bar-bg"><div class="pillar-bar-fill" style="width:${data.pct}%;background:${pc[i%pc.length]}"></div></div><div class="pillar-score" style="color:${pc[i%pc.length]}">${data.pct}</div></div>`).join('')}<div style="font-size:13px;color:var(--muted);margin-top:8px;font-family:'DM Mono'">% of maximum · Repeat every 4–6 weeks</div></div>`;
+  } else {diagCard.innerHTML='';}
+  // Season summary
+  const stEl=document.getElementById('seasonDashSummary');
+  const reviewDone=DB.load('seasonReview',null);const summerDone=DB.load('summerPlan',null);
+  let dashExtra='';
+  if(reviewDone) dashExtra+=`<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-body"><div class="timeline-date">${reviewDone.date} · Season 2024/25</div><div class="timeline-title">✅ End-of-Season Review Complete</div><div class="timeline-detail">"${(reviewDone.proud||'').substring(0,100)}${(reviewDone.proud||'').length>100?'...':''}"</div></div></div>`;
+  if(summerDone) dashExtra+=`<div class="timeline-item"><div class="timeline-dot" style="background:var(--info);box-shadow:0 0 0 2px var(--info);"></div><div class="timeline-body"><div class="timeline-date">${summerDone.date} · Summer 2025</div><div class="timeline-title">☀️ Summer Training Plan Set</div><div class="timeline-detail">Goal: "${(summerDone.bigGoal||'').substring(0,100)}"</div></div></div>`;
+  if(!reviewDone||!summerDone) dashExtra+=`<div class="timeline-item"><div class="timeline-dot muted"></div><div class="timeline-body"><div class="timeline-date">Pending</div><div class="timeline-title" style="color:var(--muted);">${!reviewDone?'⚡ Complete End-of-Season Review':'☀️ Set Summer Training Goals'}</div><div class="timeline-detail"><span onclick="showTab('${!reviewDone?'season':'summer'}')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">Go now →</span></div></div></div>`;
+  stEl.innerHTML=dashExtra?`<div style="margin-top:8px;"><div class="section-title">Season Timeline</div><div style="padding-left:4px;">${dashExtra}</div></div>`:'';
+  // Parent notice
+  const existing=document.getElementById('parentNoticeEl');
+  if(currentView==='parent'&&!existing){const n=document.createElement('div');n.id='parentNoticeEl';n.className='parent-notice';n.innerHTML='👁 Parent View — You can see all reflections and trends. His private journal is his own space; this view is for development conversations.';document.querySelector('.stats-grid').before(n);}
+  else if(currentView!=='parent'&&existing){existing.remove();}
+}
+function calcStreak(){
+  if(!matches.length) return 0;
+  let streak=0,lastDate=null;
+  for(const m of matches){const d=new Date(m.date);if(!lastDate){streak=1;lastDate=d;continue;}if((lastDate-d)/864e5<=14){streak++;lastDate=d;}else break;}
+  return streak;
+}
+
+// ── HISTORY ───────────────────────────────────────────────────────
+function matchEntryHTML(m){
+  const rc=m.result==='W'?'win':m.result==='D'?'draw':'loss';
+  const team=teams.find(t=>t.id===m.teamId);
+  const primaryPos=m.positions?.length?m.positions[0].position:'';
+  const moodMap={brilliant:'🔥',good:'😊',ok:'😐',tough:'😤',frustrated:'😞'};
+  return `<div class="match-entry" onclick="openMatchDetail('${m.id}')"><div class="match-date">${formatDate(m.date)}</div>${primaryPos?`<div class="match-team-badge badge-pos">${primaryPos}</div>`:''}<div class="match-teams">${team?team.label:m.teamLabel||'Team'} <span style="color:var(--muted)">vs</span> ${m.opponent} <span style="font-size:18px;">${moodMap[m.mood]||''}</span></div><div class="match-score ${rc}">${m.goalsFor}–${m.goalsAgainst}</div><div class="match-rating">${m.avgRating}</div></div>`;
+}
+function renderHistory(){
+  const el=document.getElementById('historyList');if(!el) return;
+  const tf=document.getElementById('filterTeam');
+  const prev=tf.value;
+  tf.innerHTML='<option value="all">All Teams</option>';
+  teams.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.label;tf.appendChild(o);});
+  if(teams.find(t=>t.id===prev)) tf.value=prev;
+  const teamF=tf.value,resultF=document.getElementById('filterResult').value;
+  let fm=filteredMatches();
+  if(teamF!=='all') fm=fm.filter(m=>m.teamId===teamF);
+  if(resultF!=='all') fm=fm.filter(m=>m.result===resultF);
+  el.innerHTML=fm.length?fm.map(m=>matchEntryHTML(m)).join(''):`<div class="card" style="text-align:center;padding:32px;"><div style="font-size:40px;margin-bottom:12px;">📂</div><div style="color:var(--muted);font-size:17px;">No matches yet.</div></div>`;
+}
+function openMatchDetail(id){
+  const m=matches.find(x=>x.id===id);if(!m) return;
+  const team=teams.find(t=>t.id===m.teamId);
+  const comp=competitions.find(c=>c.id===m.competitionId);
+  const rc=m.result==='W'?'var(--accent)':m.result==='D'?'var(--warning)':'var(--danger)';
+  const ratingsHtml=Object.entries(m.ratings||{}).map(([k,v])=>`<div class="progress-item"><div class="progress-header"><span>${k.replace(/([A-Z])/g,' $1').trim().replace(/^./,s=>s.toUpperCase())}</span><span style="font-family:'Bebas Neue';font-size:22px;color:var(--accent)">${v}/10</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${v*10}%"></div></div></div>`).join('');
+  const posHtml=m.positions?.length?m.positions.map(p=>`<span class="badge">${p.position}${p.from?` ${p.from}'–${p.to||'?'}'`:''}</span> `).join(''):'';
+  const videoHtml=m.videoMoments?.length?`<div style="margin-bottom:16px;"><div style="font-size:13px;font-family:'DM Mono';color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">🎥 Video Moments</div>${m.videoMoments.map(v=>`<div style="margin-bottom:8px;padding:10px;background:var(--surface);border-radius:8px;border:1px solid var(--border);"><a href="${v.url}" target="_blank" rel="noopener" style="color:var(--accent);font-size:15px;word-break:break-all;">${v.label||v.url}</a>${v.timestamp?` <span style="color:var(--muted);font-family:'DM Mono';font-size:13px;margin-left:8px;">${v.timestamp}</span>`:''}${v.type?` <span class="badge" style="margin-left:8px;">${v.type}</span>`:''}</div>`).join('')}</div>`:'';
+  document.getElementById('modalContent').innerHTML=`
+    <div style="font-family:'Bebas Neue';font-size:28px;letter-spacing:2px;margin-bottom:4px;padding-right:36px;">vs ${m.opponent}</div>
+    <div style="font-size:13px;font-family:'DM Mono';color:var(--muted);letter-spacing:1px;margin-bottom:14px;">${formatDate(m.date)} · ${team?team.label:''} · ${comp?comp.name:m.stage||''} · ${m.minsPlayed||'?'}' of ${m.totalMins||'?'}'</div>
+    ${posHtml?`<div style="margin-bottom:14px;">${posHtml}</div>`:''}
+    <div style="font-family:'Bebas Neue';font-size:60px;text-align:center;margin:12px 0;color:${rc};">${m.goalsFor} – ${m.goalsAgainst}</div>
+    <div style="margin:16px 0 12px;border-top:1px solid var(--border);padding-top:14px;font-family:'Bebas Neue';letter-spacing:1.5px;color:var(--muted);font-size:15px;">PERFORMANCE RATINGS</div>
+    ${ratingsHtml}
+    ${m.reflWell?`<div style="margin-bottom:12px;margin-top:14px;"><div style="font-size:13px;font-family:'DM Mono';color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">🌟 Did Well</div><div style="font-size:16px;line-height:1.6;">${renderMentionChips(m.reflWell)}</div></div>`:''}
+    ${m.reflImprove?`<div style="margin-bottom:12px;"><div style="font-size:13px;font-family:'DM Mono';color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">🎯 Improve</div><div style="font-size:16px;line-height:1.6;">${renderMentionChips(m.reflImprove)}</div></div>`:''}
+    ${m.reflMoment?`<div style="margin-bottom:12px;"><div style="font-size:13px;font-family:'DM Mono';color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">🎬 Key Moment</div><div style="font-size:16px;line-height:1.6;">${renderMentionChips(m.reflMoment)}</div></div>`:''}
+    ${videoHtml}
+    ${m.aiFeedback?`<div class="ai-feedback"><div class="ai-feedback-header">⚡ Coach AI Feedback</div><div class="ai-feedback-text">${m.aiFeedback}</div></div>`:''}
+    <button onclick="deleteMatch('${m.id}')" style="margin-top:20px;background:transparent;border:1px solid var(--danger);color:var(--danger);padding:10px 18px;border-radius:8px;cursor:pointer;font-family:'DM Mono';font-size:13px;letter-spacing:1px;text-transform:uppercase;min-height:44px;">Delete Entry</button>`;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function deleteMatch(id){if(!confirm('Delete this match?'))return;matches=matches.filter(m=>m.id!==id);DB.save('matches',matches);document.getElementById('modalOverlay').classList.remove('open');renderHistory();refreshDashboard();showToast('Deleted');}
+function closeModal(e){if(e.target===document.getElementById('modalOverlay'))document.getElementById('modalOverlay').classList.remove('open');}
+// ── GOALS ─────────────────────────────────────────────────────────
+function addGoal(){
+  const text=document.getElementById('goalText').value.trim();
+  if(!text){showToast('Please enter a goal!');return;}
+  goals.unshift({id:uid(),seasonId:activeSeason,teamId:document.getElementById('goalTeam').value,text,why:document.getElementById('goalWhy').value.trim(),setBy:document.getElementById('goalSetBy').value,targetDate:document.getElementById('goalDate').value,done:false});
+  DB.save('goals',goals);document.getElementById('goalText').value='';document.getElementById('goalWhy').value='';
+  renderGoals();showToast('Focus goal added! 🎯');
+}
+function renderGoals(){
+  const el=document.getElementById('goalsList');if(!el) return;
+  // repopulate team select
+  const sel=document.getElementById('goalTeam');const prev=sel.value;
+  sel.innerHTML='<option value="both">Both Teams</option>';
+  teams.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.label;sel.appendChild(o);});
+  if(teams.find(t=>t.id===prev)) sel.value=prev;
+  const fg=activeSeason==='all'?goals:goals.filter(g=>g.seasonId===activeSeason);
+  el.innerHTML=fg.length?fg.map(g=>`<div class="goal-card" style="opacity:${g.done?0.5:1}"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;"><div><div class="goal-card-title">${g.done?'✅ ':'🎯 '}${g.text}</div><div class="goal-card-detail">${g.why?`<div style="margin-bottom:4px;">${g.why}</div>`:''}<span style="color:var(--muted);font-family:'DM Mono';font-size:13px;">By ${formatDate(g.targetDate)} · Set by ${g.setBy}</span></div></div><div style="display:flex;gap:6px;flex-shrink:0;">${!g.done?`<button onclick="markGoalDone('${g.id}')" class="btn-sm" style="color:#34d399;border-color:rgba(52,211,153,0.3);">Done</button>`:''}<button onclick="deleteGoal('${g.id}')" class="btn-sm danger">✕</button></div></div></div>`).join(''):`<div style="color:var(--muted);font-size:16px;padding:8px 0;">No goals set for this season.</div>`;
+}
+function markGoalDone(id){goals=goals.map(g=>g.id===id?{...g,done:true}:g);DB.save('goals',goals);renderGoals();showToast('Goal achieved! 🏆');}
+function deleteGoal(id){goals=goals.filter(g=>g.id!==id);DB.save('goals',goals);renderGoals();}
+
+// ── SETUP: MODAL FORMS ───────────────────────────────────────────
+const FORM_DEFS = {
+  season: {
+    title: 'Add Season',
+    subtitle: 'A season groups all your teams and matches together',
+    fields: [
+      {id:'newSeasonLabel', label:'Season Label', type:'text', placeholder:'e.g. 2025-26', required:true},
+      {id:'newSeasonStart', label:'Start Date', type:'date'},
+      {id:'newSeasonEnd',   label:'End Date',   type:'date'},
+    ],
+    action: 'addSeason',
+    btnLabel: 'ADD SEASON'
+  },
+  club: {
+    title: 'Add Club',
+    subtitle: 'A club can have multiple teams across seasons',
+    fields: [
+      {id:'newClubName',    label:'Club Name',      type:'text',  placeholder:'e.g. United FC', required:true},
+      {id:'newClubLogo',    label:'Logo URL',        type:'text',  placeholder:'https://...'},
+      {id:'newClubWebsite', label:'Website',         type:'text',  placeholder:'https://...'},
+      {id:'newClubEmail',   label:'Contact Email',   type:'email', placeholder:'admin@club.com'},
+      {id:'newClubPathway', label:'Has professional pathway', type:'checkbox'},
+    ],
+    action: 'addClub',
+    btnLabel: 'ADD CLUB'
+  },
+  team: {
+    title: 'Add Team',
+    subtitle: 'A team belongs to one club and one season',
+    fields: [
+      {id:'newTeamClub',     label:'Club',            type:'select', source:'clubs',   required:true},
+      {id:'newTeamSeason',   label:'Season',          type:'select', source:'seasons', required:true},
+      {id:'newTeamLabel',    label:'Team Name',       type:'text',  placeholder:'e.g. United FC U9', required:true},
+      {id:'newTeamAgeGroup', label:'Age Group',       type:'text',  placeholder:'e.g. U9, U10'},
+      {id:'newTeamLeague',   label:'League / Level',  type:'text',  placeholder:'e.g. UAE Regional Pro Division'},
+      {id:'newTeamTraining', label:'Training hrs/week', type:'number', placeholder:'6', min:'0', max:'20', step:'0.5'},
+      {id:'newTeamKit1',     label:'Kit Primary Colour',   type:'color', value:'#e8ff47'},
+      {id:'newTeamKit2',     label:'Kit Secondary Colour', type:'color', value:'#0f1f16'},
+    ],
+    action: 'addTeam',
+    btnLabel: 'ADD TEAM'
+  },
+  competition: {
+    title: 'Add Competition',
+    subtitle: 'Link a competition to one team — e.g. league, cup, tournament',
+    fields: [
+      {id:'newCompTeam',  label:'Team',             type:'select', source:'teams', required:true},
+      {id:'newCompName',  label:'Competition Name', type:'text', placeholder:'e.g. UAE Youth League 2025-26', required:true},
+      {id:'newCompType',  label:'Type',             type:'selectStatic', options:['league','cup','friendly','trial','tournament']},
+      {id:'newCompStart', label:'Start Date',       type:'date'},
+      {id:'newCompEnd',   label:'End Date',         type:'date'},
+    ],
+    action: 'addCompetition',
+    btnLabel: 'ADD COMPETITION'
+  },
+  teammate: {
+    title: 'Add Teammate',
+    subtitle: 'Type @ in reflections to mention teammates by nickname',
+    fields: [
+      {id:'newMateTeam',  label:'Team',                   type:'select', source:'teams', required:true},
+      {id:'newMateName',  label:'Full Name',               type:'text', placeholder:'e.g. Jason Bateman', required:true},
+      {id:'newMateNick',  label:'@Nickname (for mentions)', type:'text', placeholder:'e.g. Jason'},
+      {id:'newMatePos',   label:'Positions',               type:'text', placeholder:'e.g. ST, CAM'},
+      {id:'newMateKit',   label:'Kit Number',              type:'number', placeholder:'7', min:'1', max:'99'},
+      {id:'newMatePhone', label:'Phone (optional)',        type:'tel', placeholder:'+971...'},
+      {id:'newMateEmail', label:'Email (optional)',        type:'email', placeholder:'player@example.com'},
+      {id:'newMateInsta', label:'Instagram (optional)',    type:'text', placeholder:'@handle'},
+    ],
+    action: 'addTeammate',
+    btnLabel: 'ADD TEAMMATE'
+  }
+};
+
+function openSetupModal(){ showTab('setup'); }
+
+function openFormModal(type) {
+  const def = FORM_DEFS[type];
+  document.getElementById('setupModalTitle').textContent = def.title;
+  document.getElementById('setupModalSubtitle').textContent = def.subtitle;
+  // Build form
+  let html = '<div class="form-grid">';
+  def.fields.forEach(f => {
+    const full = f.type === 'checkbox' || f.type === 'date' ? '' : '';
+    html += `<div class="form-group ${f.type==='checkbox'?'full':''}">`;
+    if(f.type === 'checkbox') {
+      html += `<div style="display:flex;align-items:center;gap:12px;padding-top:4px;"><input type="checkbox" id="${f.id}" style="width:22px;height:22px;flex-shrink:0;cursor:pointer;"><label for="${f.id}" style="text-transform:none;font-size:16px;letter-spacing:0;color:var(--white);cursor:pointer;">${f.label}</label></div>`;
+    } else if(f.type === 'select') {
+      const items = f.source === 'clubs' ? clubs : f.source === 'seasons' ? seasons : teams;
+      const opts = items.map(i => `<option value="${i.id}">${i.label||i.name}</option>`).join('');
+      html += `<label>${f.label}${f.required?' *':''}</label><select id="${f.id}"><option value="">— select —</option>${opts}</select>`;
+    } else if(f.type === 'selectStatic') {
+      const opts = f.options.map(o => `<option value="${o}">${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('');
+      html += `<label>${f.label}</label><select id="${f.id}">${opts}</select>`;
+    } else if(f.type === 'color') {
+      html += `<label>${f.label}</label><input type="color" id="${f.id}" value="${f.value||'#e8ff47'}">`;
+    } else {
+      const attrs = [
+        f.placeholder ? `placeholder="${f.placeholder}"` : '',
+        f.min  ? `min="${f.min}"`   : '',
+        f.max  ? `max="${f.max}"`   : '',
+        f.step ? `step="${f.step}"` : '',
+      ].filter(Boolean).join(' ');
+      html += `<label>${f.label}${f.required?' *':''}</label><input type="${f.type}" id="${f.id}" ${attrs}>`;
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  html += `<button class="submit-btn" style="margin-top:20px;" onclick="${def.action}()">${def.btnLabel}</button>`;
+  document.getElementById('setupModalForm').innerHTML = html;
+  document.getElementById('setupModalOverlay').classList.add('open');
+}
+
+function closeFormModal(e) {
+  if(e.target === document.getElementById('setupModalOverlay'))
+    document.getElementById('setupModalOverlay').classList.remove('open');
+}
+function dismissFormModal() {
+  document.getElementById('setupModalOverlay').classList.remove('open');
+}
+
+// ── SETUP: SEASONS ────────────────────────────────────────────────
+function addSeason(){
+  const label = (document.getElementById('newSeasonLabel')?.value||'').trim();
+  if(!label){showToast('Enter a season label');return;}
+  const s={id:uid(),label,start:document.getElementById('newSeasonStart')?.value||'',end:document.getElementById('newSeasonEnd')?.value||'',isActive:!seasons.length};
+  seasons.push(s);DB.save('seasons',seasons);
+  dismissFormModal();
+  renderSetupLists();populateSeasonSelector();populateSetupSelects();showToast('Season added ✅');
+  if(s.isActive){activeSeason=s.id;DB.save('activeSeason',s.id);document.getElementById('seasonSelect').value=s.id;}
+}
+function setActiveSeason(id){
+  seasons=seasons.map(s=>({...s,isActive:s.id===id}));DB.save('seasons',seasons);
+  activeSeason=id;DB.save('activeSeason',id);
+  populateSeasonSelector();document.getElementById('seasonSelect').value=id;
+  renderSetupLists();refreshDashboard();showToast('Active season updated ✅');
+}
+function deleteSeason(id){if(!confirm('Delete season?'))return;seasons=seasons.filter(s=>s.id!==id);DB.save('seasons',seasons);renderSetupLists();populateSeasonSelector();populateSetupSelects();}
+
+// ── SETUP: CLUBS ──────────────────────────────────────────────────
+function addClub(){
+  const name=(document.getElementById('newClubName')?.value||'').trim();
+  if(!name){showToast('Enter a club name');return;}
+  clubs.push({id:uid(),name,logo:(document.getElementById('newClubLogo')?.value||'').trim(),website:(document.getElementById('newClubWebsite')?.value||'').trim(),email:(document.getElementById('newClubEmail')?.value||'').trim(),pathway:document.getElementById('newClubPathway')?.checked||false});
+  DB.save('clubs',clubs);
+  dismissFormModal();renderSetupLists();populateSetupSelects();showToast('Club added ✅');refreshDashboard();
+}
+function deleteClub(id){if(!confirm('Delete club?'))return;clubs=clubs.filter(c=>c.id!==id);DB.save('clubs',clubs);renderSetupLists();populateSetupSelects();}
+
+// ── SETUP: TEAMS ──────────────────────────────────────────────────
+function addTeam(){
+  const label=(document.getElementById('newTeamLabel')?.value||'').trim();
+  const clubId=document.getElementById('newTeamClub')?.value||'';
+  const seasonId=document.getElementById('newTeamSeason')?.value||'';
+  if(!label||!clubId||!seasonId){showToast('Club, season and team name are required');return;}
+  teams.push({id:uid(),clubId,seasonId,ageGroup:(document.getElementById('newTeamAgeGroup')?.value||'').trim(),label,kit1:document.getElementById('newTeamKit1')?.value||'#e8ff47',kit2:document.getElementById('newTeamKit2')?.value||'#0f1f16',training:document.getElementById('newTeamTraining')?.value||'2',league:(document.getElementById('newTeamLeague')?.value||'').trim()});
+  DB.save('teams',teams);
+  dismissFormModal();renderSetupLists();populateSetupSelects();refreshTeamDropdowns();showToast('Team added ✅');refreshDashboard();
+}
+function deleteTeam(id){if(!confirm('Delete team?'))return;teams=teams.filter(t=>t.id!==id);DB.save('teams',teams);renderSetupLists();populateSetupSelects();refreshTeamDropdowns();}
+
+// ── SETUP: COMPETITIONS ───────────────────────────────────────────
+function addCompetition(){
+  const name=(document.getElementById('newCompName')?.value||'').trim();
+  const teamId=document.getElementById('newCompTeam')?.value||'';
+  if(!name||!teamId){showToast('Team and competition name are required');return;}
+  const team=teams.find(t=>t.id===teamId);
+  competitions.push({id:uid(),teamId,seasonId:team?.seasonId||'',name,type:document.getElementById('newCompType')?.value||'league',start:document.getElementById('newCompStart')?.value||'',end:document.getElementById('newCompEnd')?.value||''});
+  DB.save('competitions',competitions);
+  dismissFormModal();renderSetupLists();showToast('Competition added ✅');
+}
+function deleteComp(id){if(!confirm('Delete competition?'))return;competitions=competitions.filter(c=>c.id!==id);DB.save('competitions',competitions);renderSetupLists();}
+
+// ── SETUP: TEAMMATES ──────────────────────────────────────────────
+function addTeammate(){
+  const name=(document.getElementById('newMateName')?.value||'').trim();
+  const teamId=document.getElementById('newMateTeam')?.value||'';
+  if(!name||!teamId){showToast('Team and name are required');return;}
+  const team=teams.find(t=>t.id===teamId);
+  teammates.push({id:uid(),teamId,seasonId:team?.seasonId||'',name,nickname:(document.getElementById('newMateNick')?.value||'').trim(),positions:(document.getElementById('newMatePos')?.value||'').split(',').map(s=>s.trim()).filter(Boolean),kit:document.getElementById('newMateKit')?.value||'',phone:(document.getElementById('newMatePhone')?.value||'').trim(),email:(document.getElementById('newMateEmail')?.value||'').trim(),instagram:(document.getElementById('newMateInsta')?.value||'').trim()});
+  DB.save('teammates',teammates);
+  dismissFormModal();renderSetupLists();showToast('Teammate added ✅');
+}
+function deleteMate(id){if(!confirm('Delete teammate?'))return;teammates=teammates.filter(m=>m.id!==id);DB.save('teammates',teammates);renderSetupLists();}
+
+// ── SETUP: RENDER LISTS ───────────────────────────────────────────
+function renderSetupLists(){
+  // Counts
+  document.getElementById('countSeasons').textContent = seasons.length;
+  document.getElementById('countClubs').textContent   = clubs.length;
+  document.getElementById('countTeams').textContent   = teams.length;
+  document.getElementById('countComps').textContent   = competitions.length;
+  document.getElementById('countMates').textContent   = teammates.length;
+
+  // Seasons
+  const sl = document.getElementById('setupSeasonsList');
+  sl.innerHTML = seasons.length ? seasons.map(s=>`
+    <div class="setup-row">
+      <div class="setup-row-logo" style="font-size:18px;">📅</div>
+      <div class="setup-row-info">
+        <div class="setup-row-name">${s.label}${s.isActive?` <span style="font-size:12px;color:var(--accent);font-family:'DM Mono';background:rgba(232,255,71,0.1);padding:2px 8px;border-radius:10px;">ACTIVE</span>`:''}</div>
+        <div class="setup-row-detail">${s.start||'?'} → ${s.end||'?'}</div>
+      </div>
+      <div class="setup-row-actions">
+        <button class="btn-sm" onclick="setActiveSeason('${s.id}')" style="${s.isActive?'color:var(--accent);border-color:var(--accent);':''}">Set Active</button>
+        <button class="btn-sm danger" onclick="deleteSeason('${s.id}')">✕</button>
+      </div>
+    </div>`).join('') : '<div class="setup-empty">No seasons yet</div>';
+
+  // Clubs
+  const cl = document.getElementById('setupClubsList');
+  cl.innerHTML = clubs.length ? clubs.map(c=>`
+    <div class="setup-row">
+      <div class="setup-row-logo">${c.logo?`<img src="${c.logo}" onerror="this.parentElement.textContent='🏆'">`:'🏆'}</div>
+      <div class="setup-row-info">
+        <div class="setup-row-name">${c.name}${c.pathway?' <span style="color:#34d399;font-size:12px;">★ Pro pathway</span>':''}</div>
+        <div class="setup-row-detail">${c.email||c.website||'No contact added'}</div>
+      </div>
+      <div class="setup-row-actions">
+        <button class="btn-sm danger" onclick="deleteClub('${c.id}')">✕</button>
+      </div>
+    </div>`).join('') : '<div class="setup-empty">No clubs yet</div>';
+
+  // Teams
+  const tl = document.getElementById('setupTeamsList');
+  tl.innerHTML = teams.length ? teams.map(t=>{
+    const club=clubs.find(c=>c.id===t.clubId);
+    const season=seasons.find(s=>s.id===t.seasonId);
+    return `<div class="setup-row">
+      <div class="setup-row-logo">${club&&club.logo?`<img src="${club.logo}" onerror="this.parentElement.textContent='⚽'">`:'⚽'}</div>
+      <div class="setup-row-info">
+        <div class="setup-row-name" style="display:flex;align-items:center;gap:8px;">${t.label}
+          <span style="display:inline-flex;gap:4px;"><span style="width:14px;height:14px;border-radius:50%;background:${t.kit1||'#e8ff47'};border:1px solid rgba(255,255,255,0.2);display:inline-block;"></span><span style="width:14px;height:14px;border-radius:50%;background:${t.kit2||'#000'};border:1px solid rgba(255,255,255,0.2);display:inline-block;"></span></span>
+        </div>
+        <div class="setup-row-detail">${season?season.label:'?'} · ${t.training||'?'}hrs/wk${t.league?' · '+t.league:''}</div>
+      </div>
+      <div class="setup-row-actions"><button class="btn-sm danger" onclick="deleteTeam('${t.id}')">✕</button></div>
+    </div>`;
+  }).join('') : '<div class="setup-empty">Add a club and season first</div>';
+
+  // Competitions
+  const coml = document.getElementById('setupCompsList');
+  coml.innerHTML = competitions.length ? competitions.map(c=>{
+    const team=teams.find(t=>t.id===c.teamId);
+    const endStr = c.end ? ` → ${c.end}` : '';
+    return `<div class="setup-row">
+      <div class="setup-row-logo" style="font-size:18px;">🏅</div>
+      <div class="setup-row-info">
+        <div class="setup-row-name">${c.name}</div>
+        <div class="setup-row-detail">${team?team.label:'?'} · ${c.type}${c.start?' · '+c.start:''}${endStr}</div>
+      </div>
+      <div class="setup-row-actions"><button class="btn-sm danger" onclick="deleteComp('${c.id}')">✕</button></div>
+    </div>`;
+  }).join('') : '<div class="setup-empty">Add a team first</div>';
+
+  // Teammates
+  const mal = document.getElementById('setupMatesList');
+  mal.innerHTML = teammates.length ? teammates.map(m=>{
+    const team=teams.find(t=>t.id===m.teamId);
+    return `<div class="setup-row">
+      <div class="setup-row-logo" style="font-size:20px;">👤</div>
+      <div class="setup-row-info">
+        <div class="setup-row-name">${m.name}${m.nickname?` <span style="color:var(--accent);font-size:13px;font-family:'DM Mono';">@${m.nickname}</span>`:''}</div>
+        <div class="setup-row-detail">${team?team.label:'?'} · ${(m.positions||[]).join(', ')||'position unknown'}${m.kit?' · #'+m.kit:''}</div>
+      </div>
+      <div class="setup-row-actions"><button class="btn-sm danger" onclick="deleteMate('${m.id}')">✕</button></div>
+    </div>`;
+  }).join('') : '<div class="setup-empty">Add teammates to use @mentions in reflections</div>';
+}
+
+function populateSetupSelects(){
+  // These are now built dynamically in openFormModal — nothing to pre-populate
+  // But we keep this for team dropdowns in Log Match / Training
+}
+
+function refreshTeamDropdowns(){
+  const activeTeams=activeSeason==='all'?teams:teams.filter(t=>t.seasonId===activeSeason);
+  ['matchTeam','trainTeam'].forEach(id=>{
+    const sel=document.getElementById(id);if(!sel) return;
+    const prev=sel.value;
+    sel.innerHTML='<option value="">— select team —</option>';
+    activeTeams.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.label;sel.appendChild(o);});
+    if(activeTeams.find(t=>t.id===prev)) sel.value=prev;
+  });
+  // Also refresh goal team dropdown
+  const gsel=document.getElementById('goalTeam');
+  if(gsel){
+    const gprev=gsel.value;
+    gsel.innerHTML='<option value="both">Both Teams</option>';
+    activeTeams.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.label;gsel.appendChild(o);});
+    if(activeTeams.find(t=>t.id===gprev)) gsel.value=gprev;
+  }
+}
+
+// ── SEASON REVIEW ─────────────────────────────────────────────────
+function rateStar(group,val){
+  starRatings[group]=val;
+  document.querySelectorAll(`[data-group="${group}"]`).forEach(s=>s.classList.toggle('lit',parseInt(s.dataset.val)<=val));
+}
+async function submitSeasonReview(){
+  const proud=document.getElementById('srProud').value.trim();
+  const gap=document.getElementById('srGap').value.trim();
+  const letter=document.getElementById('srLetter').value.trim();
+  if(!proud||!gap||!letter){showToast('Please complete the key fields (proud, gap, letter)!');return;}
+  const ratings={};
+  SEASON_DIMS.forEach(d=>{const el=document.getElementById(d.id);if(el) ratings[d.label]=parseInt(el.value);});
+  const review={id:uid(),date:today(),season:'2024/25',unitedLearn:document.getElementById('srUnitedLearn').value.trim(),eliteLearn:document.getElementById('srEliteLearn').value.trim(),unitedStars:starRatings.united,eliteStars:starRatings.elite,proud,hard:document.getElementById('srHard').value.trim(),newSkill:document.getElementById('srNewSkill').value.trim(),gap,coachTheme:document.getElementById('srCoachTheme').value.trim(),letter,ratings,aiFeedback:''};
+  DB.save('seasonReview',review);
+  const fb=document.getElementById('aiSeasonFeedback'),ft=document.getElementById('aiSeasonText');
+  fb.style.display='block';ft.innerHTML='<div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>';
+  const prompt=`You are an experienced football development coach writing a personal end-of-season message to a 9-year-old aspiring professional footballer. He played this season as Centre Back for United FC U9 and Striker for Elite FC U11 (playing up two age groups). Next season he focuses solely on United FC U10 with 6hrs training/week.\n\nHis review:\n- United FC taught him: "${review.unitedLearn||'not filled'}"\n- Elite FC taught him: "${review.eliteLearn||'not filled'}"\n- Most proud of: "${review.proud}"\n- Hardest moment: "${review.hard||'not answered'}"\n- New skill gained: "${review.newSkill||'not answered'}"\n- Biggest gap: "${review.gap}"\n- Coaches kept saying: "${review.coachTheme||'not noted'}"\n\nWrite 4–5 warm, honest, inspiring sentences. Acknowledge the dual-team experience specifically. Reference his actual words. Give one concrete summer suggestion. End with something that makes him excited for September at United U10. Proper football language, no bullet points, coach voice.`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const feedback=data.content?.[0]?.text||'What a season — two teams, two very different roles. Everything you learned is yours to build on.';
+    review.aiFeedback=feedback;DB.save('seasonReview',review);ft.textContent=feedback;
+  }catch(e){ft.textContent='What a season. Two clubs, two positions, two completely different challenges — every minute on that pitch made you better. Build on all of it this summer.';}
+  showToast('Season review saved! 🏆');
+  loadExistingReview();renderJourney();refreshDashboard();
+}
+function loadExistingReview(){
+  const review=DB.load('seasonReview',null);
+  const el=document.getElementById('existingReview');
+  if(!review||!el){if(el) el.innerHTML='';return;}
+  const starsHtml=n=>'⭐'.repeat(n)+'☆'.repeat(Math.max(0,5-n));
+  el.innerHTML=`<div class="saved-review-card"><div class="saved-review-header"><div><div style="font-family:'Bebas Neue';font-size:20px;letter-spacing:2px;color:var(--warning);">✅ Season Review Saved — ${review.date}</div><div style="font-size:15px;color:var(--muted);margin-top:3px;">Season 2024/25</div></div><button onclick="DB.save('seasonReview',null);loadExistingReview();" class="btn-sm">Edit</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;"><div style="font-size:16px;"><span style="color:var(--cb-color);font-family:'DM Mono';font-size:13px;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;">United FC</span>${starsHtml(review.unitedStars||0)}</div><div style="font-size:16px;"><span style="color:var(--st-color);font-family:'DM Mono';font-size:13px;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;">Elite FC</span>${starsHtml(review.eliteStars||0)}</div></div>${review.proud?`<div style="margin-bottom:10px;"><div style="font-size:13px;font-family:'DM Mono';color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Most Proud Of</div><div style="font-size:16px;line-height:1.5;">${review.proud}</div></div>`:''}<div class="journey-letter">"${review.letter.substring(0,220)}${review.letter.length>220?'...':''}"</div>${review.aiFeedback?`<div class="ai-feedback"><div class="ai-feedback-header">⚡ Coach AI Message</div><div class="ai-feedback-text">${review.aiFeedback}</div></div>`:''}</div>`;
+}
+
+// ── SUMMER PLAN ───────────────────────────────────────────────────
+function addSkillRow(cId){
+  const c=document.getElementById(cId);const r=document.createElement('div');r.className='summer-skill-row';
+  r.innerHTML=`<input type="text" placeholder="Describe the skill..." class="summer-skill-input"><input type="number" min="1" max="7" value="3" class="summer-freq-input"><span class="summer-skill-label">×/wk</span><button onclick="removeSkillRow(this)" class="remove-skill-btn">✕</button>`;
+  c.appendChild(r);
+}
+function removeSkillRow(btn){
+  const c=btn.closest('[id$="Skills"]');
+  if(c&&c.querySelectorAll('.summer-skill-row').length>1) btn.closest('.summer-skill-row').remove();
+}
+function collectSkills(cId){return Array.from(document.querySelectorAll(`#${cId} .summer-skill-row`)).map(r=>({skill:r.querySelector('.summer-skill-input').value.trim(),freq:r.querySelector('.summer-freq-input').value})).filter(s=>s.skill);}
+async function submitSummerPlan(){
+  const bigGoal=document.getElementById('summerBigGoal').value.trim();
+  if(!bigGoal){showToast('Please fill in your big summer goal!');return;}
+  const plan={id:uid(),date:today(),techSkills:collectSkills('techSkills'),physSkills:collectSkills('physSkills'),watchSkills:collectSkills('watchSkills'),minSessions:document.getElementById('summerMinSessions').value,sessionLen:document.getElementById('summerSessionLen').value,bigGoal,accountable:document.getElementById('summerAccountable').value.trim(),selfImage:document.getElementById('summerSelfImage').value.trim(),aiFeedback:''};
+  DB.save('summerPlan',plan);
+  const fb=document.getElementById('aiSummerFeedback'),ft=document.getElementById('aiSummerText');
+  fb.style.display='block';ft.innerHTML='<div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>';
+  const techList=plan.techSkills.map(s=>`${s.skill}(${s.freq}×/wk)`).join(', ')||'nothing specified';
+  const prompt=`Football development coach reviewing a 9-year-old's summer training plan. He joins United FC U10 in September with 6hrs training/week.\n\nPlan: Technical: ${techList}. Physical: ${plan.physSkills.map(s=>s.skill).join(', ')||'nothing'}. ${plan.minSessions} sessions/week × ${plan.sessionLen}min. Big goal: "${bigGoal}". September vision: "${plan.selfImage||'not specified'}"\n\nWrite 3–4 sentences of practical, honest feedback. What stands out as strong? One specific suggestion if something is missing for a developing defender/striker. End with a line about the summer being where champions separate themselves from the rest. Proper football language, no bullet points, coach voice.`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const fbText=data.content?.[0]?.text||'Solid plan. Stay consistent with the ball work and September will take care of itself.';
+    plan.aiFeedback=fbText;DB.save('summerPlan',plan);ft.textContent=fbText;
+  }catch(e){ft.textContent='Solid commitment. The sessions you do when no one is watching are exactly what separates good players from great ones — stay consistent.';}
+  showToast('Summer plan saved! ☀️');loadSummerPlan();
+}
+function loadSummerPlan(){
+  const plan=DB.load('summerPlan',null);const el=document.getElementById('savedSummerPlan');
+  if(!plan||!el){if(el) el.innerHTML='';return;}
+  el.innerHTML=`<div class="saved-review-card" style="border-color:rgba(90,200,250,0.25);background:linear-gradient(135deg,rgba(90,200,250,0.06),rgba(52,211,153,0.03));"><div class="saved-review-header"><div><div style="font-family:'Bebas Neue';font-size:20px;letter-spacing:2px;color:var(--info);">✅ Summer Plan Active — ${plan.date}</div><div style="font-size:15px;color:var(--muted);margin-top:3px;">${plan.minSessions} sessions/week · ${plan.sessionLen}min each</div></div><button onclick="DB.save('summerPlan',null);loadSummerPlan();" class="btn-sm">Edit</button></div>${plan.bigGoal?`<div style="margin-bottom:12px;"><div style="font-size:13px;font-family:'DM Mono';color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">🎯 Big Summer Goal</div><div style="font-size:17px;font-weight:600;color:var(--accent);">${plan.bigGoal}</div></div>`:''} ${plan.aiFeedback?`<div class="ai-feedback"><div class="ai-feedback-header">⚡ Coach AI Review</div><div class="ai-feedback-text">${plan.aiFeedback}</div></div>`:''}</div>`;
+}
+
+// ── JOURNEY ───────────────────────────────────────────────────────
+function renderJourney(){
+  const totalW=matches.filter(m=>m.result==='W').length;
+  document.getElementById('careerMatches').textContent=matches.length;
+  document.getElementById('careerSeasons').textContent=seasons.length;
+  document.getElementById('careerClubs').textContent=clubs.length;
+  document.getElementById('careerWinPct').textContent=matches.length?Math.round(totalW/matches.length*100)+'%':'—';
+  const tl=document.getElementById('journeyTimeline');
+  if(!seasons.length){tl.innerHTML=`<div class="card" style="text-align:center;padding:40px;"><div style="font-size:44px;margin-bottom:14px;">🌱</div><div style="color:var(--muted);font-size:18px;">Your journey starts here.<br>Set up your first season in <span onclick="showTab('setup')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">⚙ Setup</span></div></div>`;return;}
+  const review=DB.load('seasonReview',null);
+  const allSeasons=[...seasons].sort((a,b)=>b.label.localeCompare(a.label));
+  const pc=['#5ac8fa','#e8ff47','#ff9f5a','#ff6b6b','#c084fc','#34d399'];
+  tl.innerHTML=allSeasons.map(s=>{
+    const sm=matches.filter(m=>m.seasonId===s.id);
+    const st=trainings.filter(t=>t.seasonId===s.id);
+    const sd=diagnostics.filter(d=>d.seasonId===s.id);
+    const sw=sm.filter(m=>m.result==='W').length,sdd=sm.filter(m=>m.result==='D').length,sl=sm.filter(m=>m.result==='L').length;
+    const avg=sm.length?(sm.reduce((a,b)=>a+(b.avgRating||0),0)/sm.length).toFixed(1):'—';
+    const seasonTeams=teams.filter(t=>t.seasonId===s.id);
+    const teamBadges=seasonTeams.map(t=>{
+      const club=clubs.find(c=>c.id===t.clubId);
+      const logoHtml=club&&club.logo?`<img src="${club.logo}" style="width:20px;height:20px;border-radius:4px;object-fit:contain;vertical-align:middle;margin-right:5px;" onerror="this.style.display='none'">`:'';
+      return `<span class="badge">${logoHtml}${t.label}</span>`;
+    }).join(' ');
+    const pillarHtml=sd.length?`<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;"><div style="font-size:13px;font-family:'DM Mono';color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">Latest Diagnostic</div>${Object.entries(sd[0].scores).slice(0,3).map(([t,d],i)=>`<div class="pillar-row" style="margin-bottom:8px;"><div class="pillar-label" style="font-size:12px;">${t.split('—')[0].trim().replace('Technical ','').replace('Tactical ','').replace('Development','Dev').substring(0,14)}</div><div class="pillar-bar-bg"><div class="pillar-bar-fill" style="width:${d.pct}%;background:${pc[i]}"></div></div><div class="pillar-score" style="font-size:18px;color:${pc[i]}">${d.pct}</div></div>`).join('')}</div>`:'';
+    const letterHtml=review&&review.letter&&(review.season===s.label||s.isActive)?`<div class="journey-letter">"${review.letter.substring(0,180)}${review.letter.length>180?'...':''}"</div>`:'';
+    return `<div class="journey-season-card"><div class="journey-season-header"><div style="flex:1;min-width:0;"><div class="journey-season-label">${s.label}</div><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">${teamBadges||'<span style="color:var(--muted);font-size:14px;font-family:\'DM Mono\';">No teams added</span>'}</div></div><div class="journey-wdl"><div class="journey-wdl-item"><div class="journey-wdl-num" style="color:var(--accent);">${sw}</div><div class="journey-wdl-label">W</div></div><div class="journey-wdl-item" style="margin:0 8px;"><div class="journey-wdl-num" style="color:var(--warning);">${sdd}</div><div class="journey-wdl-label">D</div></div><div class="journey-wdl-item"><div class="journey-wdl-num" style="color:var(--danger);">${sl}</div><div class="journey-wdl-label">L</div></div><div class="journey-wdl-item" style="margin-left:12px;"><div class="journey-wdl-num" style="color:var(--accent);">${avg}</div><div class="journey-wdl-label">Avg</div></div></div></div><div style="display:flex;gap:16px;font-size:14px;color:var(--muted);font-family:'DM Mono';">⚽ ${sm.length} matches &nbsp; 🏋️ ${st.length} sessions &nbsp; 📊 ${sd.length} diagnostics</div>${pillarHtml}${letterHtml}</div>`;
+  }).join('');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+</script>
+</body>
+</html>

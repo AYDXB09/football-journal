@@ -11,6 +11,34 @@ type Competition = { id: string; name: string; type: string | null; team_id: str
 type Teammate = { id: string; name: string; nickname: string | null; kit_number: number | null; positions: string[] | null; team_id: string; teams?: { team_label: string } | null }
 type ModalType = 'season' | 'club' | 'team' | 'competition' | 'teammate' | null
 
+// ── Shared sub-components (defined OUTSIDE SetupPage to prevent remount on re-render) ──
+const smBtn: React.CSSProperties = { background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontFamily: 'DM Mono', fontSize: '12px', minHeight: '36px' }
+const dangerBtn: React.CSSProperties = { ...smBtn, color: 'var(--danger)' }
+
+function Row({ label, sub, onEdit, onDel }: { label: string; sub?: string; onEdit: () => void; onDel: () => void }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: '16px', fontWeight: 600 }}>{label}</div>
+        {sub && <div style={{ fontSize: '12px', color: 'var(--muted)', fontFamily: 'DM Mono', marginTop: '2px' }}>{sub}</div>}
+      </div>
+      <div style={{ display: 'flex', gap: '6px' }}>
+        <button style={smBtn} onClick={onEdit}>Edit</button>
+        <button style={dangerBtn} onClick={onDel}>Delete</button>
+      </div>
+    </div>
+  )
+}
+
+function FG({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: '14px' }}>
+      <label style={{ display: 'block', fontSize: '13px', fontFamily: 'DM Mono', letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '7px' }}>{label}</label>
+      {children}
+    </div>
+  )
+}
+
 export default function SetupPage() {
   const supabase = createClient()
   const [userId, setUserId] = useState<string | null>(null)
@@ -103,32 +131,6 @@ export default function SetupPage() {
   // ── Styles ──
   const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '18px 16px', marginBottom: '12px' }
   const addBtn: React.CSSProperties = { background: 'var(--accent)', border: 'none', color: 'var(--surface)', padding: '9px 16px', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Bebas Neue', fontSize: '15px', letterSpacing: '1px', minHeight: '40px' }
-  const smBtn: React.CSSProperties = { background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontFamily: 'DM Mono', fontSize: '12px', minHeight: '36px' }
-  const dangerBtn: React.CSSProperties = { ...smBtn, color: 'var(--danger)' }
-
-  function Row({ label, sub, onEdit, onDel }: { label: string; sub?: string; onEdit: () => void; onDel: () => void }) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '16px', fontWeight: 600 }}>{label}</div>
-          {sub && <div style={{ fontSize: '12px', color: 'var(--muted)', fontFamily: 'DM Mono', marginTop: '2px' }}>{sub}</div>}
-        </div>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <button style={smBtn} onClick={onEdit}>Edit</button>
-          <button style={dangerBtn} onClick={onDel}>Delete</button>
-        </div>
-      </div>
-    )
-  }
-
-  function FG({ label, children }: { label: string; children: React.ReactNode }) {
-    return (
-      <div style={{ marginBottom: '14px' }}>
-        <label style={{ display: 'block', fontSize: '13px', fontFamily: 'DM Mono', letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '7px' }}>{label}</label>
-        {children}
-      </div>
-    )
-  }
 
   const empty = (msg: string) => <p style={{ color: 'var(--muted)', fontFamily: 'DM Mono', fontSize: '14px', textAlign: 'center', padding: '12px 0' }}>{msg}</p>
   const counter = (n: number) => <span style={{ fontSize: '13px', fontFamily: 'DM Mono', color: 'var(--muted)', padding: '3px 10px', border: '1px solid var(--border)', borderRadius: '20px' }}>{n}</span>

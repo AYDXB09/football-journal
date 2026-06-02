@@ -294,8 +294,18 @@ export default function SetupPage() {
               <FG label="Training Hours / Week"><input type="number" value={f('training_hours_per_week')} onChange={e => set('training_hours_per_week', e.target.value)} placeholder="6" min="0" max="40" /></FG>
               <FG label="League Level"><input value={f('league_level')} onChange={e => set('league_level', e.target.value)} placeholder="e.g. UAE Pro Division" /></FG>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <FG label="Kit Primary"><input type="color" value={f('kit_primary_colour') || '#162a1f'} onChange={e => set('kit_primary_colour', e.target.value)} /></FG>
-                <FG label="Kit Secondary"><input type="color" value={f('kit_secondary_colour') || '#e8ff47'} onChange={e => set('kit_secondary_colour', e.target.value)} /></FG>
+                <FG label="Kit Primary">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '6px', border: '2px solid var(--border)', background: f('kit_primary_colour') || '#162a1f', flexShrink: 0 }} />
+                    <input value={f('kit_primary_colour') || '#162a1f'} onChange={e => set('kit_primary_colour', e.target.value)} placeholder="#162a1f" style={{ fontFamily: 'DM Mono', fontSize: '14px' }} />
+                  </div>
+                </FG>
+                <FG label="Kit Secondary">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '6px', border: '2px solid var(--border)', background: f('kit_secondary_colour') || '#e8ff47', flexShrink: 0 }} />
+                    <input value={f('kit_secondary_colour') || '#e8ff47'} onChange={e => set('kit_secondary_colour', e.target.value)} placeholder="#e8ff47" style={{ fontFamily: 'DM Mono', fontSize: '14px' }} />
+                  </div>
+                </FG>
               </div>
             </>}
 

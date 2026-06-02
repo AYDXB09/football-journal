@@ -187,7 +187,7 @@ export default function SetupPage() {
       <div style={card}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
           {sectionTitle('⚽', 'Teams', teams.length)}
-          <button style={addBtn} onClick={() => openModal('team')} disabled={clubs.length === 0 || seasons.length === 0}>+ Add Team</button>
+          <button style={addBtn} onClick={() => openModal('team', { kit_primary_colour: '#162a1f', kit_secondary_colour: '#e8ff47' })} disabled={clubs.length === 0 || seasons.length === 0}>+ Add Team</button>
         </div>
         {clubs.length === 0 || seasons.length === 0
           ? empty('Add a club and season first')
@@ -297,13 +297,13 @@ export default function SetupPage() {
                 <FG label="Kit Primary">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '36px', height: '36px', borderRadius: '6px', border: '2px solid var(--border)', background: f('kit_primary_colour') || '#162a1f', flexShrink: 0 }} />
-                    <input value={f('kit_primary_colour') || '#162a1f'} onChange={e => set('kit_primary_colour', e.target.value)} placeholder="#162a1f" style={{ fontFamily: 'DM Mono', fontSize: '14px' }} />
+                    <input value={f('kit_primary_colour')} onChange={e => set('kit_primary_colour', e.target.value)} placeholder="#162a1f" style={{ fontFamily: 'DM Mono', fontSize: '14px' }} />
                   </div>
                 </FG>
                 <FG label="Kit Secondary">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '36px', height: '36px', borderRadius: '6px', border: '2px solid var(--border)', background: f('kit_secondary_colour') || '#e8ff47', flexShrink: 0 }} />
-                    <input value={f('kit_secondary_colour') || '#e8ff47'} onChange={e => set('kit_secondary_colour', e.target.value)} placeholder="#e8ff47" style={{ fontFamily: 'DM Mono', fontSize: '14px' }} />
+                    <input value={f('kit_secondary_colour')} onChange={e => set('kit_secondary_colour', e.target.value)} placeholder="#e8ff47" style={{ fontFamily: 'DM Mono', fontSize: '14px' }} />
                   </div>
                 </FG>
               </div>

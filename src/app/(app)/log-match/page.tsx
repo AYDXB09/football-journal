@@ -1,0 +1,320 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { today } from '@/lib/utils/format'
+
+type Season = { id: string; label: string; is_active: boolean }
+type Team = { id: string; team_label: string; season_id: string }
+type Competition = { id: string; name: string; team_id: string }
+type Teammate = { id: string; name: string; nickname: string | null; team_id: string }
+
+const POSITIONS = ['GK','CB','LB','RB','LWB','RWB','CDM','CM','CAM','LM','RM','LW','RW','SS','ST']
+const STAGES = ['friendly','pool','group','knockout','final','other']
+const MOMENT_TYPES = ['highlight','learning','error','goal','assist']
+const MOODS = [{ v: 'brilliant', e: '🔥' }, { v: 'good', e: '😊' }, { v: 'ok', e: '😐' }, { v: 'tough', e: '😤' }, { v: 'frustrated', e: '😞' }]
+
+const DIMENSIONS: Record<string, { id: string; label: string; sub: string }[]> = {
+  CB: [{ id: 'distribution', label: 'Distribution', sub: 'Passing from the back' }, { id: 'positioning', label: 'Positioning', sub: 'Reading the game' }, { id: 'leadership', label: 'Leadership', sub: 'Organising the team' }, { id: 'defending', label: 'Defending', sub: 'Tackles, headers, blocks' }, { id: 'composure', label: 'Composure', sub: 'Calm under pressure' }, { id: 'effort', label: 'Effort', sub: 'Work rate' }],
+  ST: [{ id: 'movement', label: 'Movement', sub: 'Runs in behind' }, { id: 'firstTouch', label: 'First Touch', sub: 'Controlling fast balls' }, { id: 'decisionSpeed', label: 'Decision Speed', sub: 'Quick passing or holding' }, { id: 'pressing', label: 'Pressing', sub: 'Hunting the ball' }, { id: 'composure', label: 'Composure', sub: 'Calm under pressure' }, { id: 'effort', label: 'Effort', sub: 'Work rate' }],
+  default: [{ id: 'technical', label: 'Technical Quality', sub: 'Ball control & passing' }, { id: 'tactical', label: 'Tactical Awareness', sub: 'Reading the game' }, { id: 'physical', label: 'Physical Effort', sub: 'Work rate' }, { id: 'composure', label: 'Composure', sub: 'Calm under pressure' }, { id: 'decision', label: 'Decision Making', sub: 'Speed of choices' }, { id: 'effort', label: 'Effort', sub: 'Overall effort' }],
+}
+
+type PosRow = { position: string; from: string; to: string }
+type VideoRow = { url: string; timestamp: string; label: string; type: string }
+
+function FG({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
+  return <div style={{ gridColumn: full ? '1/-1' : undefined }}><label style={{ display: 'block', fontSize: '13px', fontFamily: 'DM Mono', letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '7px' }}>{label}</label>{children}</div>
+}
+
+export default function LogMatchPage() {
+  const supabase = createClient()
+  const [userId, setUserId] = useState<string | null>(null)
+  const [seasons, setSeasons] = useState<Season[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
+  const [competitions, setCompetitions] = useState<Competition[]>([])
+  const [teammates, setTeammates] = useState<Teammate[]>([])
+  const [filteredComps, setFilteredComps] = useState<Competition[]>([])
+  const [saving, setSaving] = useState(false)
+  const [toast, setToast] = useState('')
+  const [saved, setSaved] = useState(false)
+
+  // Match details
+  const [date, setDate] = useState(today())
+  const [seasonId, setSeasonId] = useState('')
+  const [teamId, setTeamId] = useState('')
+  const [compId, setCompId] = useState('')
+  const [stage, setStage] = useState('friendly')
+  const [opponent, setOpponent] = useState('')
+  const [venue, setVenue] = useState('home')
+  const [goalsFor, setGoalsFor] = useState(0)
+  const [goalsAgainst, setGoalsAgainst] = useState(0)
+  const [totalMins, setTotalMins] = useState(60)
+  const [minsPlayed, setMinsPlayed] = useState(60)
+  const [mood, setMood] = useState('')
+  const [overallRating, setOverallRating] = useState(7)
+
+  // Positions
+  const [posRows, setPosRows] = useState<PosRow[]>([{ position: 'CB', from: '', to: '' }])
+
+  // Ratings
+  const [ratings, setRatings] = useState<Record<string, number>>({})
+
+  // Reflection
+  const [reflWell, setReflWell] = useState('')
+  const [reflImprove, setReflImprove] = useState('')
+  const [reflMoment, setReflMoment] = useState('')
+  const [reflCoach, setReflCoach] = useState('')
+  const [aiText, setAiText] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+
+  // Video
+  const [videoRows, setVideoRows] = useState<VideoRow[]>([])
+
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+      setUserId(user.id)
+      const [sr, tr, cr, mr] = await Promise.all([
+        supabase.from('seasons').select('id, label, is_active').eq('player_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('teams').select('id, team_label, season_id').eq('player_id', user.id),
+        supabase.from('competitions').select('id, name, team_id').eq('player_id', user.id),
+        supabase.from('teammates').select('id, name, nickname, team_id').eq('player_id', user.id),
+      ])
+      const s = sr.data || []
+      setSeasons(s)
+      setTeams(tr.data as Team[] || [])
+      setCompetitions(cr.data as Competition[] || [])
+      setTeammates(mr.data as Teammate[] || [])
+      const active = s.find(x => x.is_active)
+      if (active) setSeasonId(active.id)
+    })
+  }, [supabase])
+
+  function onTeamChange(tid: string) {
+    setTeamId(tid)
+    setCompId('')
+    setFilteredComps(competitions.filter(c => c.team_id === tid))
+  }
+
+  function getDims() {
+    const firstPos = posRows[0]?.position || 'default'
+    return DIMENSIONS[firstPos] || DIMENSIONS.default
+  }
+
+  function setRating(dim: string, val: number) { setRatings(prev => ({ ...prev, [dim]: val })) }
+
+  function addPosRow() { setPosRows(prev => [...prev, { position: 'CB', from: '', to: '' }]) }
+  function removePosRow(i: number) { setPosRows(prev => prev.filter((_, idx) => idx !== i)) }
+  function updatePosRow(i: number, field: keyof PosRow, val: string) { setPosRows(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r)) }
+
+  function addVideoRow() { setVideoRows(prev => [...prev, { url: '', timestamp: '', label: '', type: '' }]) }
+  function removeVideoRow(i: number) { setVideoRows(prev => prev.filter((_, idx) => idx !== i)) }
+  function updateVideoRow(i: number, field: keyof VideoRow, val: string) { setVideoRows(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r)) }
+
+  function calcResult() {
+    if (goalsFor > goalsAgainst) return 'W'
+    if (goalsFor < goalsAgainst) return 'L'
+    return 'D'
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!userId || !seasonId || !teamId || !opponent) { showToast('Fill in season, team and opponent'); return }
+    setSaving(true)
+
+    const result = calcResult()
+
+    const { data: match, error: matchErr } = await supabase.from('matches').insert({
+      player_id: userId, season_id: seasonId, team_id: teamId,
+      competition_id: compId || null, date, opponent, venue_type: venue as 'home',
+      stage: stage as 'friendly', total_match_minutes: totalMins, minutes_played: minsPlayed,
+      goals_for: goalsFor, goals_against: goalsAgainst, result, mood: mood as 'good' || null, overall_rating: overallRating,
+    }).select().single()
+
+    if (matchErr || !match) { showToast('Error saving match'); console.error(matchErr); setSaving(false); return }
+
+    // Positions
+    if (posRows.filter(r => r.position).length > 0) {
+      await supabase.from('match_positions').insert(posRows.filter(r => r.position).map(r => ({ match_id: match.id, position: r.position, minutes_from: r.from ? parseInt(r.from) : null, minutes_to: r.to ? parseInt(r.to) : null })))
+    }
+
+    // Ratings
+    const dims = getDims()
+    const ratingRows = dims.map(d => ({ match_id: match.id, dimension: d.id, score: ratings[d.id] || 5 }))
+    await supabase.from('match_ratings').insert(ratingRows)
+
+    // Video moments
+    const validVideos = videoRows.filter(v => v.url)
+    if (validVideos.length > 0) {
+      await supabase.from('match_video_moments').insert(validVideos.map(v => ({ match_id: match.id, url: v.url, timestamp_in_video: v.timestamp || null, label: v.label || null, moment_type: v.type as 'highlight' || null })))
+    }
+
+    // Reflection
+    const { data: refl } = await supabase.from('reflections').insert({
+      player_id: userId, entity_type: 'match', entity_id: match.id, author_role: 'player',
+      went_well: reflWell || null, improve_next: reflImprove || null,
+      key_moment: reflMoment || null, coach_feedback_received: reflCoach || null,
+      visibility: 'family',
+    }).select().single()
+
+    showToast('Match saved ✓')
+    setSaved(true)
+
+    // AI feedback
+    if (refl && (reflWell || reflImprove || reflMoment)) {
+      setAiLoading(true)
+      try {
+        const res = await fetch('/api/ai/match-feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ opponent, result, position: posRows[0]?.position, overall_rating: overallRating, went_well: reflWell, improve_next: reflImprove, key_moment: reflMoment, coach_feedback: reflCoach, ratings: Object.fromEntries(getDims().map(d => [d.label, ratings[d.id] || 5])) }),
+        })
+        const data = await res.json()
+        if (data.feedback) {
+          setAiText(data.feedback)
+          await supabase.from('reflections').update({ ai_feedback: data.feedback }).eq('id', refl.id)
+        }
+      } catch (err) { console.error('AI error', err) }
+      setAiLoading(false)
+    }
+
+    setSaving(false)
+  }
+
+  const dims = getDims()
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit}>
+        {/* Match Details */}
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+          <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '1.5px', marginBottom: '16px' }}>📅 Match Details</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <FG label="Date"><input type="date" value={date} onChange={e => setDate(e.target.value)} required /></FG>
+            <FG label="Season"><select value={seasonId} onChange={e => setSeasonId(e.target.value)} required><option value="">— select —</option>{seasons.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}</select></FG>
+            <FG label="Team"><select value={teamId} onChange={e => onTeamChange(e.target.value)} required><option value="">— select team —</option>{teams.map(t => <option key={t.id} value={t.id}>{t.team_label}</option>)}</select></FG>
+            <FG label="Competition"><select value={compId} onChange={e => setCompId(e.target.value)}><option value="">— select —</option>{filteredComps.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></FG>
+            <FG label="Stage"><select value={stage} onChange={e => setStage(e.target.value)}>{STAGES.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}</select></FG>
+            <FG label="Venue"><select value={venue} onChange={e => setVenue(e.target.value)}><option value="home">Home</option><option value="away">Away</option><option value="neutral">Neutral</option></select></FG>
+            <FG label="Opponent"><input value={opponent} onChange={e => setOpponent(e.target.value)} placeholder="e.g. Al Nasr Academy" required /></FG>
+            <FG label=""><div /></FG>
+            <FG label="Our Goals"><input type="number" value={goalsFor} onChange={e => setGoalsFor(parseInt(e.target.value) || 0)} min="0" max="20" /></FG>
+            <FG label="Their Goals"><input type="number" value={goalsAgainst} onChange={e => setGoalsAgainst(parseInt(e.target.value) || 0)} min="0" max="20" /></FG>
+            <FG label="Total Match Time (mins)"><input type="number" value={totalMins} onChange={e => setTotalMins(parseInt(e.target.value) || 60)} min="10" max="120" /></FG>
+            <FG label="My Time Played (mins)"><input type="number" value={minsPlayed} onChange={e => setMinsPlayed(parseInt(e.target.value) || 60)} min="0" max="120" /></FG>
+          </div>
+        </div>
+
+        {/* Positions */}
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+          <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '1.5px', marginBottom: '8px' }}>🔢 Positions Played</div>
+          <p style={{ fontSize: '15px', color: 'var(--muted)', marginBottom: '14px' }}>Add each position with time range — split if you changed roles.</p>
+          {posRows.map((row, i) => (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px auto', gap: '10px', marginBottom: '10px', alignItems: 'center' }}>
+              <select value={row.position} onChange={e => updatePosRow(i, 'position', e.target.value)} style={{ fontSize: '17px', padding: '10px 12px' }}>
+                {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <input type="number" placeholder="From" min="0" max="120" value={row.from} onChange={e => updatePosRow(i, 'from', e.target.value)} style={{ fontSize: '16px', padding: '10px 12px' }} />
+              <input type="number" placeholder="To" min="0" max="120" value={row.to} onChange={e => updatePosRow(i, 'to', e.target.value)} style={{ fontSize: '16px', padding: '10px 12px' }} />
+              <button type="button" onClick={() => removePosRow(i)} style={{ background: 'transparent', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '18px', minWidth: '36px', minHeight: '36px' }}>✕</button>
+            </div>
+          ))}
+          <button type="button" onClick={addPosRow} style={{ background: 'transparent', border: '1px dashed var(--border)', color: 'var(--muted)', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '15px', fontFamily: 'DM Mono', width: '100%', minHeight: '44px', marginTop: '4px' }}>+ Add Position</button>
+        </div>
+
+        {/* Mood */}
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+          <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '1.5px', marginBottom: '16px' }}>😊 How Did I Feel?</div>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            {MOODS.map(m => (
+              <button key={m.v} type="button" onClick={() => setMood(m.v)}
+                style={{ background: mood === m.v ? 'rgba(232,255,71,0.08)' : 'var(--surface)', border: `2px solid ${mood === m.v ? 'var(--accent)' : 'var(--border)'}`, borderRadius: '10px', padding: '12px 14px', cursor: 'pointer', fontSize: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', minWidth: '72px', minHeight: '72px', justifyContent: 'center' }}>
+                {m.e}
+                <span style={{ fontSize: '12px', fontFamily: 'DM Mono', color: 'var(--muted)', textTransform: 'uppercase' }}>{m.v}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Ratings */}
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+          <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '1.5px', marginBottom: '8px' }}>📊 Rate My Performance (1–10)</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '16px' }}>
+            {dims.map(d => (
+              <div key={d.id}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <div>
+                    <div style={{ fontSize: '16px', fontWeight: 500 }}>{d.label}</div>
+                    <div style={{ fontSize: '13px', color: 'var(--muted)', fontFamily: 'DM Mono' }}>{d.sub}</div>
+                  </div>
+                  <div style={{ fontFamily: 'Bebas Neue', fontSize: '26px', color: 'var(--accent)', minWidth: '32px', textAlign: 'right' }}>{ratings[d.id] || 5}</div>
+                </div>
+                <input type="range" min="1" max="10" value={ratings[d.id] || 5} onChange={e => setRating(d.id, parseInt(e.target.value))} />
+              </div>
+            ))}
+          </div>
+          <div>
+            <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontFamily: 'DM Mono', letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '7px' }}>
+              <span>Overall Rating</span><span style={{ color: 'var(--accent)', fontFamily: 'Bebas Neue', fontSize: '26px' }}>{overallRating}/10</span>
+            </label>
+            <input type="range" min="1" max="10" value={overallRating} onChange={e => setOverallRating(parseInt(e.target.value))} />
+          </div>
+        </div>
+
+        {/* Reflection */}
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+          <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '1.5px', marginBottom: '16px' }}>💬 My Reflection</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <FG label="🌟 One thing I did really well today"><textarea value={reflWell} onChange={e => setReflWell(e.target.value)} placeholder="Be specific — what exactly did you do well?" style={{ minHeight: '80px' }} /></FG>
+            <FG label="🎯 One thing I want to improve next time"><textarea value={reflImprove} onChange={e => setReflImprove(e.target.value)} placeholder="What specific situation could you handle differently?" style={{ minHeight: '80px' }} /></FG>
+            <FG label="🎬 Moment of the Match"><textarea value={reflMoment} onChange={e => setReflMoment(e.target.value)} placeholder="Describe a specific moment — good or bad" style={{ minHeight: '80px' }} /></FG>
+            <FG label="📋 Coach Feedback"><textarea value={reflCoach} onChange={e => setReflCoach(e.target.value)} placeholder="What did the coach say?" style={{ minHeight: '80px' }} /></FG>
+          </div>
+          {(aiText || aiLoading) && (
+            <div style={{ background: 'rgba(232,255,71,0.05)', border: '1px solid rgba(232,255,71,0.2)', borderRadius: '10px', padding: '16px', marginTop: '16px' }}>
+              <div style={{ fontSize: '13px', fontFamily: 'DM Mono', letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '10px' }}>⚡ Coach AI Feedback</div>
+              {aiLoading && !aiText
+                ? <div style={{ display: 'flex', gap: '4px' }}><span className="ai-dot" /><span className="ai-dot" /><span className="ai-dot" /></div>
+                : <p style={{ fontSize: '17px', lineHeight: 1.7 }}>{aiText}</p>}
+            </div>
+          )}
+        </div>
+
+        {/* Video Moments */}
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+          <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '1.5px', marginBottom: '8px' }}>🎥 Video Moments</div>
+          <p style={{ fontSize: '15px', color: 'var(--muted)', marginBottom: '14px' }}>Paste links to specific moments — YouTube, Hudl, Google Drive, anything.</p>
+          {videoRows.map((row, i) => (
+            <div key={i} style={{ marginBottom: '14px', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px', background: 'var(--surface)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px', marginBottom: '10px' }}>
+                <input type="url" placeholder="Paste video URL (YouTube, Hudl, Drive...)" value={row.url} onChange={e => updateVideoRow(i, 'url', e.target.value)} style={{ fontSize: '16px' }} />
+                <button type="button" onClick={() => removeVideoRow(i)} style={{ background: 'transparent', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '18px', minWidth: '36px' }}>✕</button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                <input type="text" placeholder="Timestamp (e.g. 2:14)" value={row.timestamp} onChange={e => updateVideoRow(i, 'timestamp', e.target.value)} style={{ fontSize: '16px' }} />
+                <input type="text" placeholder="Label" value={row.label} onChange={e => updateVideoRow(i, 'label', e.target.value)} style={{ fontSize: '16px' }} />
+              </div>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                {MOMENT_TYPES.map(t => (
+                  <button key={t} type="button" onClick={() => updateVideoRow(i, 'type', row.type === t ? '' : t)}
+                    style={{ fontSize: '13px', fontFamily: 'DM Mono', textTransform: 'uppercase', padding: '4px 10px', borderRadius: '4px', border: `1px solid ${row.type === t ? 'var(--accent)' : 'var(--border)'}`, color: row.type === t ? 'var(--accent)' : 'var(--muted)', background: row.type === t ? 'rgba(232,255,71,0.08)' : 'var(--surface)', cursor: 'pointer' }}>{t}</button>
+                ))}
+              </div>
+            </div>
+          ))}
+          <button type="button" onClick={addVideoRow} style={{ background: 'transparent', border: '1px dashed var(--border)', color: 'var(--muted)', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '15px', fontFamily: 'DM Mono', width: '100%', minHeight: '44px' }}>+ Add Video Moment</button>
+        </div>
+
+        <button type="submit" disabled={saving || saved}
+          style={{ width: '100%', padding: '16px', background: saved ? '#34d399' : saving ? 'var(--border)' : 'var(--accent)', border: 'none', borderRadius: '10px', color: 'var(--surface)', fontFamily: 'Bebas Neue', fontSize: '22px', letterSpacing: '3px', cursor: saving || saved ? 'not-allowed' : 'pointer', marginBottom: '24px' }}>
+          {saved ? '✓ Match Saved' : saving ? 'Saving...' : 'Save Match Reflection'}
+        </button>
+      </form>
+
+      {toast && <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent)', color: 'var(--surface)', padding: '14px 24px', borderRadius: '10px', fontFamily: 'Bebas Neue', fontSize: '16px', letterSpacing: '1.5px', zIndex: 300 }}>{toast}</div>}
+    </div>
+  )
+}

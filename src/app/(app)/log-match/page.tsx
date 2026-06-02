@@ -60,8 +60,10 @@ export default function LogMatchPage() {
   const [stage, setStage] = useState('friendly')
   const [opponent, setOpponent] = useState('')
   const [venue, setVenue] = useState('home')
-  const [goalsFor, setGoalsFor] = useState(0)
-  const [goalsAgainst, setGoalsAgainst] = useState(0)
+  const [goalsFor, setGoalsFor] = useState('')
+  const [goalsAgainst, setGoalsAgainst] = useState('')
+  const gf = parseInt(goalsFor) || 0
+  const ga = parseInt(goalsAgainst) || 0
   const [totalMins, setTotalMins] = useState(60)
   const [minsPlayed, setMinsPlayed] = useState(60)
   const [mood, setMood] = useState('')
@@ -120,13 +122,13 @@ export default function LogMatchPage() {
     if (!opponent || !teamId || chipsFetched.current) return
     chipsFetched.current = true
     setChipsLoading(true)
-    const result = goalsFor > goalsAgainst ? 'W' : goalsFor < goalsAgainst ? 'L' : 'D'
+    const result = gf > ga ? 'W' : gf < ga ? 'L' : 'D'
     fetch('/api/ai/chip-suggestions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         type: 'match',
-        context: { opponent, result, goals_for: goalsFor, goals_against: goalsAgainst, position: posRows[0]?.position, mood },
+        context: { opponent, result, goals_for: gf, goals_against: ga, position: posRows[0]?.position, mood },
       }),
     })
       .then(r => r.json())
@@ -157,27 +159,27 @@ export default function LogMatchPage() {
   function updateVideoRow(i: number, field: keyof VideoRow, val: string) { setVideoRows(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r)) }
 
   function calcResult() {
-    if (goalsFor > goalsAgainst) return 'W'
-    if (goalsFor < goalsAgainst) return 'L'
+    if (gf > ga) return 'W'
+    if (gf < ga) return 'L'
     return 'D'
   }
 
   // Autosave — creates/updates match + reflection only (positions/ratings/video handled on full submit)
   const doAutoSave = useCallback(async (snap: {
     uid: string; seasonId: string; teamId: string; compId: string; date: string
-    stage: string; opponent: string; venue: string; goalsFor: number; goalsAgainst: number
+    stage: string; opponent: string; venue: string; gf: number; ga: number
     totalMins: number; minsPlayed: number; mood: string; overallRating: number
     reflWell: string; reflImprove: string; reflMoment: string; reflCoach: string
   }) => {
     if (!snap.opponent || !snap.seasonId || !snap.teamId) return
     setAutoSaveStatus('saving')
-    const result = snap.goalsFor > snap.goalsAgainst ? 'W' : snap.goalsFor < snap.goalsAgainst ? 'L' : 'D'
+    const result = snap.gf > snap.ga ? 'W' : snap.gf < snap.ga ? 'L' : 'D'
     const matchPayload = {
       player_id: snap.uid, season_id: snap.seasonId, team_id: snap.teamId,
       competition_id: snap.compId || null, date: snap.date, opponent: snap.opponent,
       venue_type: snap.venue as 'home', stage: snap.stage as 'friendly',
       total_match_minutes: snap.totalMins, minutes_played: snap.minsPlayed,
-      goals_for: snap.goalsFor, goals_against: snap.goalsAgainst, result,
+      goals_for: snap.gf, goals_against: snap.ga, result,
       mood: snap.mood as 'good' || null, overall_rating: snap.overallRating,
     }
     const currentMatchId = savedMatchIdRef.current
@@ -214,7 +216,7 @@ export default function LogMatchPage() {
     if (saved) return
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
     setAutoSaveStatus('')
-    const snap = { uid: userId, seasonId, teamId, compId, date, stage, opponent, venue, goalsFor, goalsAgainst, totalMins, minsPlayed, mood, overallRating, reflWell, reflImprove, reflMoment, reflCoach }
+    const snap = { uid: userId, seasonId, teamId, compId, date, stage, opponent, venue, gf, ga, totalMins, minsPlayed, mood, overallRating, reflWell, reflImprove, reflMoment, reflCoach }
     autoSaveTimer.current = setTimeout(() => doAutoSave(snap), 2000)
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current) }
   }, [date, seasonId, teamId, compId, stage, opponent, venue, goalsFor, goalsAgainst, totalMins, minsPlayed, mood, overallRating, reflWell, reflImprove, reflMoment, reflCoach, userId, saved])
@@ -229,7 +231,7 @@ export default function LogMatchPage() {
       player_id: userId, season_id: seasonId, team_id: teamId,
       competition_id: compId || null, date, opponent, venue_type: venue as 'home',
       stage: stage as 'friendly', total_match_minutes: totalMins, minutes_played: minsPlayed,
-      goals_for: goalsFor, goals_against: goalsAgainst, result, mood: mood as 'good' || null, overall_rating: overallRating,
+      goals_for: gf, goals_against: ga, result, mood: mood as 'good' || null, overall_rating: overallRating,
     }
 
     let matchId = savedMatchIdRef.current
@@ -319,8 +321,8 @@ export default function LogMatchPage() {
             <FG label="Venue"><select value={venue} onChange={e => setVenue(e.target.value)}><option value="home">Home</option><option value="away">Away</option><option value="neutral">Neutral</option></select></FG>
             <FG label="Opponent"><input value={opponent} onChange={e => setOpponent(e.target.value)} placeholder="e.g. Al Nasr Academy" required /></FG>
             <FG label=""><div /></FG>
-            <FG label="Our Goals"><input type="number" value={goalsFor} onChange={e => setGoalsFor(parseInt(e.target.value) || 0)} min="0" max="20" /></FG>
-            <FG label="Their Goals"><input type="number" value={goalsAgainst} onChange={e => setGoalsAgainst(parseInt(e.target.value) || 0)} min="0" max="20" /></FG>
+            <FG label="Our Goals"><input type="number" value={goalsFor} onChange={e => setGoalsFor(e.target.value)} placeholder="0" min="0" max="20" /></FG>
+            <FG label="Their Goals"><input type="number" value={goalsAgainst} onChange={e => setGoalsAgainst(e.target.value)} placeholder="0" min="0" max="20" /></FG>
             <FG label="Total Match Time (mins)"><input type="number" value={totalMins} onChange={e => setTotalMins(parseInt(e.target.value) || 60)} min="10" max="120" /></FG>
             <FG label="My Time Played (mins)"><input type="number" value={minsPlayed} onChange={e => setMinsPlayed(parseInt(e.target.value) || 60)} min="0" max="120" /></FG>
           </div>

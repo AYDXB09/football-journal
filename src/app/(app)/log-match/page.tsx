@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { today } from '@/lib/utils/format'
 
@@ -38,6 +38,16 @@ export default function LogMatchPage() {
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState('')
   const [saved, setSaved] = useState(false)
+
+  // Autosave
+  const [savedMatchId, setSavedMatchId] = useState<string | null>(null)
+  const [savedReflId, setSavedReflId] = useState<string | null>(null)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'' | 'saving' | 'saved'>('')
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const savedMatchIdRef = useRef<string | null>(null)
+  const savedReflIdRef = useRef<string | null>(null)
+  useEffect(() => { savedMatchIdRef.current = savedMatchId }, [savedMatchId])
+  useEffect(() => { savedReflIdRef.current = savedReflId }, [savedReflId])
 
   // Match details
   const [date, setDate] = useState(today())
@@ -120,51 +130,127 @@ export default function LogMatchPage() {
     return 'D'
   }
 
+  // Autosave — creates/updates match + reflection only (positions/ratings/video handled on full submit)
+  const doAutoSave = useCallback(async (snap: {
+    uid: string; seasonId: string; teamId: string; compId: string; date: string
+    stage: string; opponent: string; venue: string; goalsFor: number; goalsAgainst: number
+    totalMins: number; minsPlayed: number; mood: string; overallRating: number
+    reflWell: string; reflImprove: string; reflMoment: string; reflCoach: string
+  }) => {
+    if (!snap.opponent || !snap.seasonId || !snap.teamId) return
+    setAutoSaveStatus('saving')
+    const result = snap.goalsFor > snap.goalsAgainst ? 'W' : snap.goalsFor < snap.goalsAgainst ? 'L' : 'D'
+    const matchPayload = {
+      player_id: snap.uid, season_id: snap.seasonId, team_id: snap.teamId,
+      competition_id: snap.compId || null, date: snap.date, opponent: snap.opponent,
+      venue_type: snap.venue as 'home', stage: snap.stage as 'friendly',
+      total_match_minutes: snap.totalMins, minutes_played: snap.minsPlayed,
+      goals_for: snap.goalsFor, goals_against: snap.goalsAgainst, result,
+      mood: snap.mood as 'good' || null, overall_rating: snap.overallRating,
+    }
+    const currentMatchId = savedMatchIdRef.current
+    const currentReflId = savedReflIdRef.current
+
+    if (!currentMatchId) {
+      // First autosave — create match + reflection
+      const { data: match, error: matchErr } = await supabase.from('matches').insert(matchPayload).select().single()
+      if (matchErr || !match) { setAutoSaveStatus(''); return }
+      setSavedMatchId(match.id)
+      const { data: refl } = await supabase.from('reflections').insert({
+        player_id: snap.uid, entity_type: 'match', entity_id: match.id, author_role: 'player',
+        went_well: snap.reflWell || null, improve_next: snap.reflImprove || null,
+        key_moment: snap.reflMoment || null, coach_feedback_received: snap.reflCoach || null,
+        visibility: 'family',
+      }).select().single()
+      if (refl) setSavedReflId(refl.id)
+    } else {
+      // Subsequent autosaves — update existing records
+      await Promise.all([
+        supabase.from('matches').update(matchPayload).eq('id', currentMatchId),
+        currentReflId ? supabase.from('reflections').update({
+          went_well: snap.reflWell || null, improve_next: snap.reflImprove || null,
+          key_moment: snap.reflMoment || null, coach_feedback_received: snap.reflCoach || null,
+        }).eq('id', currentReflId) : Promise.resolve(),
+      ])
+    }
+    setAutoSaveStatus('saved')
+  }, [supabase])
+
+  // Autosave effect — watches all form fields, requires opponent + team + season
+  useEffect(() => {
+    if (!userId || !seasonId || !teamId || !opponent) return
+    if (saved) return
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+    setAutoSaveStatus('')
+    const snap = { uid: userId, seasonId, teamId, compId, date, stage, opponent, venue, goalsFor, goalsAgainst, totalMins, minsPlayed, mood, overallRating, reflWell, reflImprove, reflMoment, reflCoach }
+    autoSaveTimer.current = setTimeout(() => doAutoSave(snap), 2000)
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current) }
+  }, [date, seasonId, teamId, compId, stage, opponent, venue, goalsFor, goalsAgainst, totalMins, minsPlayed, mood, overallRating, reflWell, reflImprove, reflMoment, reflCoach, userId, saved])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!userId || !seasonId || !teamId || !opponent) { showToast('Fill in season, team and opponent'); return }
     setSaving(true)
 
     const result = calcResult()
-
-    const { data: match, error: matchErr } = await supabase.from('matches').insert({
+    const matchPayload = {
       player_id: userId, season_id: seasonId, team_id: teamId,
       competition_id: compId || null, date, opponent, venue_type: venue as 'home',
       stage: stage as 'friendly', total_match_minutes: totalMins, minutes_played: minsPlayed,
       goals_for: goalsFor, goals_against: goalsAgainst, result, mood: mood as 'good' || null, overall_rating: overallRating,
-    }).select().single()
+    }
 
-    if (matchErr || !match) { showToast('Error saving match'); console.error(matchErr); setSaving(false); return }
+    let matchId = savedMatchIdRef.current
+    let reflId = savedReflIdRef.current
+
+    if (matchId) {
+      // Match already autosaved — just update it
+      await supabase.from('matches').update(matchPayload).eq('id', matchId)
+      if (reflId) {
+        await supabase.from('reflections').update({
+          went_well: reflWell || null, improve_next: reflImprove || null,
+          key_moment: reflMoment || null, coach_feedback_received: reflCoach || null,
+        }).eq('id', reflId)
+      }
+      // Replace positions and ratings (autosave skipped these)
+      await supabase.from('match_positions').delete().eq('match_id', matchId)
+      await supabase.from('match_ratings').delete().eq('match_id', matchId)
+    } else {
+      // No autosave yet — full insert
+      const { data: match, error: matchErr } = await supabase.from('matches').insert(matchPayload).select().single()
+      if (matchErr || !match) { showToast('Error saving match'); console.error(matchErr); setSaving(false); return }
+      matchId = match.id
+
+      const { data: refl } = await supabase.from('reflections').insert({
+        player_id: userId, entity_type: 'match', entity_id: matchId, author_role: 'player',
+        went_well: reflWell || null, improve_next: reflImprove || null,
+        key_moment: reflMoment || null, coach_feedback_received: reflCoach || null,
+        visibility: 'family',
+      }).select().single()
+      if (refl) reflId = refl.id
+    }
 
     // Positions
     if (posRows.filter(r => r.position).length > 0) {
-      await supabase.from('match_positions').insert(posRows.filter(r => r.position).map(r => ({ match_id: match.id, position: r.position, minutes_from: r.from ? parseInt(r.from) : null, minutes_to: r.to ? parseInt(r.to) : null })))
+      await supabase.from('match_positions').insert(posRows.filter(r => r.position).map(r => ({ match_id: matchId, position: r.position, minutes_from: r.from ? parseInt(r.from) : null, minutes_to: r.to ? parseInt(r.to) : null })))
     }
 
     // Ratings
     const dims = getDims()
-    const ratingRows = dims.map(d => ({ match_id: match.id, dimension: d.id, score: ratings[d.id] || 5 }))
-    await supabase.from('match_ratings').insert(ratingRows)
+    await supabase.from('match_ratings').insert(dims.map(d => ({ match_id: matchId, dimension: d.id, score: ratings[d.id] || 5 })))
 
     // Video moments
     const validVideos = videoRows.filter(v => v.url)
     if (validVideos.length > 0) {
-      await supabase.from('match_video_moments').insert(validVideos.map(v => ({ match_id: match.id, url: v.url, timestamp_in_video: v.timestamp || null, label: v.label || null, moment_type: v.type as 'highlight' || null })))
+      await supabase.from('match_video_moments').insert(validVideos.map(v => ({ match_id: matchId, url: v.url, timestamp_in_video: v.timestamp || null, label: v.label || null, moment_type: v.type as 'highlight' || null })))
     }
-
-    // Reflection
-    const { data: refl } = await supabase.from('reflections').insert({
-      player_id: userId, entity_type: 'match', entity_id: match.id, author_role: 'player',
-      went_well: reflWell || null, improve_next: reflImprove || null,
-      key_moment: reflMoment || null, coach_feedback_received: reflCoach || null,
-      visibility: 'family',
-    }).select().single()
 
     showToast('Match saved ✓')
     setSaved(true)
+    setAutoSaveStatus('saved')
 
     // AI feedback
-    if (refl && (reflWell || reflImprove || reflMoment)) {
+    if (reflId && (reflWell || reflImprove || reflMoment)) {
       setAiLoading(true)
       try {
         const res = await fetch('/api/ai/match-feedback', {
@@ -175,7 +261,7 @@ export default function LogMatchPage() {
         const data = await res.json()
         if (data.feedback) {
           setAiText(data.feedback)
-          await supabase.from('reflections').update({ ai_feedback: data.feedback }).eq('id', refl.id)
+          await supabase.from('reflections').update({ ai_feedback: data.feedback }).eq('id', reflId)
         }
       } catch (err) { console.error('AI error', err) }
       setAiLoading(false)
@@ -307,6 +393,13 @@ export default function LogMatchPage() {
           ))}
           <button type="button" onClick={addVideoRow} style={{ background: 'transparent', border: '1px dashed var(--border)', color: 'var(--muted)', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '15px', fontFamily: 'DM Mono', width: '100%', minHeight: '44px' }}>+ Add Video Moment</button>
         </div>
+
+        {/* Autosave status */}
+        {autoSaveStatus && (
+          <div style={{ textAlign: 'center', marginBottom: '8px', fontSize: '13px', fontFamily: 'DM Mono', color: 'var(--muted)', letterSpacing: '0.5px' }}>
+            {autoSaveStatus === 'saving' ? '· saving...' : '· autosaved ✓'}
+          </div>
+        )}
 
         <button type="submit" disabled={saving || saved}
           style={{ width: '100%', padding: '16px', background: saved ? '#34d399' : saving ? 'var(--border)' : 'var(--accent)', border: 'none', borderRadius: '10px', color: 'var(--surface)', fontFamily: 'Bebas Neue', fontSize: '22px', letterSpacing: '3px', cursor: saving || saved ? 'not-allowed' : 'pointer', marginBottom: '24px' }}>

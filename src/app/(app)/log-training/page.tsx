@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { today, formatDate } from '@/lib/utils/format'
 
@@ -40,6 +40,13 @@ export default function LogTrainingPage() {
   const [rating, setRating] = useState(7)
   const [notes, setNotes] = useState('')
 
+  // Autosave
+  const [savedTrainingId, setSavedTrainingId] = useState<string | null>(null)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'' | 'saving' | 'saved'>('')
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const savedTrainingIdRef = useRef<string | null>(null)
+  useEffect(() => { savedTrainingIdRef.current = savedTrainingId }, [savedTrainingId])
+
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const loadTrainings = useCallback(async (uid: string) => {
@@ -64,18 +71,69 @@ export default function LogTrainingPage() {
     })
   }, [supabase, loadTrainings])
 
+  // Autosave — creates or updates the training record
+  const doAutoSave = useCallback(async (snap: {
+    uid: string; seasonId: string; teamId: string; date: string
+    duration: string; sessionType: string; focusAreas: string; coachLed: string; rating: number; notes: string
+  }) => {
+    if (!snap.seasonId) return
+    setAutoSaveStatus('saving')
+    const focusArr = snap.focusAreas ? snap.focusAreas.split(',').map(f => f.trim()).filter(Boolean) : []
+    const payload = {
+      player_id: snap.uid, season_id: snap.seasonId, team_id: snap.teamId || null, date: snap.date,
+      duration_minutes: parseInt(snap.duration), session_type: snap.sessionType as 'technical',
+      focus_areas: focusArr.length ? focusArr : null, coach_led: snap.coachLed === 'yes',
+      rating: snap.rating, notes: snap.notes || null,
+    }
+    const currentId = savedTrainingIdRef.current
+    if (!currentId) {
+      const { data, error } = await supabase.from('training_sessions').insert(payload).select().single()
+      if (!error && data) { setSavedTrainingId(data.id); setAutoSaveStatus('saved') }
+      else setAutoSaveStatus('')
+    } else {
+      const { error } = await supabase.from('training_sessions').update(payload).eq('id', currentId)
+      if (!error) setAutoSaveStatus('saved')
+      else setAutoSaveStatus('')
+    }
+  }, [supabase])
+
+  // Autosave effect — requires seasonId at minimum
+  useEffect(() => {
+    if (!userId || !seasonId) return
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+    setAutoSaveStatus('')
+    const snap = { uid: userId, seasonId, teamId, date, duration, sessionType, focusAreas, coachLed, rating, notes }
+    autoSaveTimer.current = setTimeout(() => doAutoSave(snap), 2000)
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current) }
+  }, [date, teamId, seasonId, duration, sessionType, focusAreas, coachLed, rating, notes, userId])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!userId || !seasonId) { showToast('Select a season first'); return }
     setSaving(true)
+
     const focusArr = focusAreas ? focusAreas.split(',').map(f => f.trim()).filter(Boolean) : []
-    const { error } = await supabase.from('training_sessions').insert({
+    const payload = {
       player_id: userId, season_id: seasonId, team_id: teamId || null, date,
       duration_minutes: parseInt(duration), session_type: sessionType as 'technical',
       focus_areas: focusArr.length ? focusArr : null, coach_led: coachLed === 'yes', rating, notes: notes || null,
-    })
-    if (error) { showToast('Error saving'); console.error(error) }
-    else { showToast('Training saved ✓'); setNotes(''); setFocusAreas(''); setRating(7); setDate(today()); await loadTrainings(userId) }
+    }
+
+    const currentId = savedTrainingIdRef.current
+    if (currentId) {
+      // Already autosaved — just update
+      await supabase.from('training_sessions').update(payload).eq('id', currentId)
+    } else {
+      const { error } = await supabase.from('training_sessions').insert(payload)
+      if (error) { showToast('Error saving'); console.error(error); setSaving(false); return }
+    }
+
+    showToast('Training saved ✓')
+    // Reset form for next entry
+    setSavedTrainingId(null)
+    setAutoSaveStatus('')
+    setNotes(''); setFocusAreas(''); setRating(7); setDate(today())
+    await loadTrainings(userId)
     setSaving(false)
   }
 
@@ -101,10 +159,19 @@ export default function LogTrainingPage() {
             <div style={{ gridColumn: '1/-1' }}><FG label="My Reflection"><textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="What did you take away? What clicked? What still needs work?" style={{ minHeight: '100px' }} /></FG></div>
           </div>
         </div>
+
+        {/* Autosave status */}
+        {autoSaveStatus && (
+          <div style={{ textAlign: 'center', marginBottom: '8px', fontSize: '13px', fontFamily: 'DM Mono', color: 'var(--muted)', letterSpacing: '0.5px' }}>
+            {autoSaveStatus === 'saving' ? '· saving...' : '· autosaved ✓'}
+          </div>
+        )}
+
         <button type="submit" disabled={saving} style={{ width: '100%', padding: '16px', background: saving ? 'var(--border)' : 'var(--accent)', border: 'none', borderRadius: '10px', color: 'var(--surface)', fontFamily: 'Bebas Neue', fontSize: '22px', letterSpacing: '3px', cursor: saving ? 'not-allowed' : 'pointer', marginBottom: '28px' }}>
           {saving ? 'Saving...' : 'Save Training Session'}
         </button>
       </form>
+
       <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '2px', color: 'var(--muted)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>Recent Sessions<span style={{ flex: 1, height: '1px', background: 'var(--border)', display: 'block' }} /></div>
       {trainings.length === 0
         ? <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '10px', padding: '24px', textAlign: 'center', color: 'var(--muted)', fontFamily: 'DM Mono', fontSize: '14px' }}>No sessions logged yet</div>

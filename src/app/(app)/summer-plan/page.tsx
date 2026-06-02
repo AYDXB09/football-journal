@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 type Season = { id: string; label: string; is_active: boolean }
@@ -58,6 +58,13 @@ export default function SummerPlanPage() {
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState('')
   const [existing, setExisting] = useState(false)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'' | 'saving' | 'saved'>('')
+
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const initialLoadDone = useRef(false)
+  const existingRef = useRef(false)
+
+  useEffect(() => { existingRef.current = existing }, [existing])
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -69,10 +76,12 @@ export default function SummerPlanPage() {
       setSeasons(s || [])
       const active = (s || []).find(x => x.is_active)
       if (active) { setSeasonId(active.id); loadPlan(user.id, active.id) }
+      else initialLoadDone.current = true
     })
   }, [supabase])
 
   async function loadPlan(uid: string, sid: string) {
+    initialLoadDone.current = false
     const { data } = await supabase.from('summer_plans').select('*').eq('player_id', uid).eq('season_id', sid).single()
     if (data) {
       setExisting(true)
@@ -85,8 +94,44 @@ export default function SummerPlanPage() {
       setAccountable(data.accountability_partner || '')
       setSelfImage(data.september_self_image || '')
       setAiText(data.ai_feedback || '')
+    } else {
+      setExisting(false)
+      setTechSkills([{ skill: '', freq: 3 }]); setPhysSkills([{ skill: '', freq: 2 }])
+      setWatchSkills([{ skill: '', freq: 1 }]); setMinSessions('5'); setSessionLen('30')
+      setBigGoal(''); setAccountable(''); setSelfImage(''); setAiText('')
     }
+    setTimeout(() => { initialLoadDone.current = true }, 150)
   }
+
+  async function autoSave(uid: string, sid: string, currentExisting: boolean, data: {
+    techSkills: SkillRow[]; physSkills: SkillRow[]; watchSkills: SkillRow[]
+    minSessions: string; sessionLen: string; bigGoal: string; accountable: string; selfImage: string
+  }) {
+    setAutoSaveStatus('saving')
+    const payload = {
+      player_id: uid, season_id: sid,
+      technical_skills: data.techSkills, physical_skills: data.physSkills, watch_skills: data.watchSkills,
+      min_sessions_per_week: parseInt(data.minSessions), session_length_minutes: parseInt(data.sessionLen),
+      big_goal: data.bigGoal || null, accountability_partner: data.accountable || null,
+      september_self_image: data.selfImage || null,
+    }
+    const fn = currentExisting
+      ? supabase.from('summer_plans').update(payload).eq('player_id', uid).eq('season_id', sid)
+      : supabase.from('summer_plans').insert(payload)
+    const { error } = await fn
+    if (!error) { setExisting(true); setAutoSaveStatus('saved') }
+    else setAutoSaveStatus('')
+  }
+
+  // Autosave — fires 2s after last change
+  useEffect(() => {
+    if (!initialLoadDone.current || !userId || !seasonId) return
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+    setAutoSaveStatus('')
+    const snapshot = { techSkills, physSkills, watchSkills, minSessions, sessionLen, bigGoal, accountable, selfImage }
+    autoSaveTimer.current = setTimeout(() => autoSave(userId, seasonId, existingRef.current, snapshot), 2000)
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current) }
+  }, [techSkills, physSkills, watchSkills, minSessions, sessionLen, bigGoal, accountable, selfImage, userId, seasonId])
 
   function addRow(setter: React.Dispatch<React.SetStateAction<SkillRow[]>>, def: SkillRow) {
     setter(prev => [...prev, { ...def }])
@@ -118,6 +163,7 @@ export default function SummerPlanPage() {
     if (error) { showToast('Error saving'); console.error(error); setSaving(false); setAiLoading(false); return }
 
     setExisting(true)
+    setAutoSaveStatus('saved')
     showToast('Summer plan saved ✓')
 
     try {
@@ -181,7 +227,7 @@ export default function SummerPlanPage() {
         </div>
       </div>
 
-      <div style={{ background: 'var(--card-bg)', border: '1px solid rgba(232,255,71,0.3)', borderRadius: '12px', padding: '20px', marginBottom: '16px', background: 'linear-gradient(135deg,rgba(232,255,71,0.05),transparent)' }}>
+      <div style={{ background: 'var(--card-bg)', border: '1px solid rgba(232,255,71,0.3)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
         <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '1.5px', marginBottom: '16px' }}>🎽 September Target</div>
         <FG label="In September, I want my coaches and teammates to see me as...">
           <textarea value={selfImage} onChange={e => setSelfImage(e.target.value)} placeholder="Think about your attitude, your role, your technical level..." />
@@ -197,9 +243,16 @@ export default function SummerPlanPage() {
         </div>
       )}
 
+      {/* Autosave status */}
+      {autoSaveStatus && (
+        <div style={{ textAlign: 'center', marginBottom: '8px', fontSize: '13px', fontFamily: 'DM Mono', color: 'var(--muted)', letterSpacing: '0.5px' }}>
+          {autoSaveStatus === 'saving' ? '· saving...' : '· autosaved ✓'}
+        </div>
+      )}
+
       <button onClick={handleSave} disabled={saving}
         style={{ width: '100%', padding: '16px', background: saving ? 'var(--border)' : 'linear-gradient(135deg,#5ac8fa,#34d399)', border: 'none', borderRadius: '10px', color: 'var(--surface)', fontFamily: 'Bebas Neue', fontSize: '22px', letterSpacing: '3px', cursor: saving ? 'not-allowed' : 'pointer', marginBottom: '24px' }}>
-        {saving ? 'Saving...' : 'Save My Summer Plan'}
+        {saving ? 'Saving...' : 'Save & Get AI Feedback'}
       </button>
 
       {toast && <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent)', color: 'var(--surface)', padding: '14px 24px', borderRadius: '10px', fontFamily: 'Bebas Neue', fontSize: '16px', letterSpacing: '1.5px', zIndex: 300 }}>{toast}</div>}

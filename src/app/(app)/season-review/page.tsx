@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 type Season = { id: string; label: string; is_active: boolean }
@@ -41,6 +41,13 @@ export default function SeasonReviewPage() {
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState('')
   const [existing, setExisting] = useState<boolean>(false)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'' | 'saving' | 'saved'>('')
+
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const initialLoadDone = useRef(false)
+  const existingRef = useRef(false)
+
+  useEffect(() => { existingRef.current = existing }, [existing])
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -52,10 +59,12 @@ export default function SeasonReviewPage() {
       setSeasons(s || [])
       const active = (s || []).find(x => x.is_active)
       if (active) { setSeasonId(active.id); loadSeason(user.id, active.id) }
+      else initialLoadDone.current = true
     })
   }, [supabase])
 
   async function loadSeason(uid: string, sid: string) {
+    initialLoadDone.current = false
     const [tr, rr] = await Promise.all([
       supabase.from('teams').select('id, team_label, season_id').eq('player_id', uid).eq('season_id', sid),
       supabase.from('season_reviews').select('*').eq('player_id', uid).eq('season_id', sid).single(),
@@ -72,8 +81,43 @@ export default function SeasonReviewPage() {
       setRatings((rr.data.ratings as Record<string, number>) || {})
       setTeamReflections((rr.data.team_reflections as Record<string, { text: string; rating: number }>) || {})
       setAiText(rr.data.ai_feedback || '')
+    } else {
+      setExisting(false)
+      setProud(''); setHard(''); setNewSkill(''); setGap(''); setCoachTheme(''); setLetter('')
+      setRatings({}); setTeamReflections({}); setAiText('')
     }
+    setTimeout(() => { initialLoadDone.current = true }, 150)
   }
+
+  async function autoSave(uid: string, sid: string, currentExisting: boolean, data: {
+    teamReflections: Record<string, { text: string; rating: number }>
+    proud: string; hard: string; newSkill: string; gap: string; coachTheme: string; letter: string
+    ratings: Record<string, number>
+  }) {
+    setAutoSaveStatus('saving')
+    const payload = {
+      player_id: uid, season_id: sid,
+      team_reflections: data.teamReflections, proud: data.proud, hardest_moment: data.hard,
+      new_skill: data.newSkill, gap: data.gap, coach_theme: data.coachTheme,
+      letter_to_self: data.letter, ratings: data.ratings,
+    }
+    const fn = currentExisting
+      ? supabase.from('season_reviews').update(payload).eq('player_id', uid).eq('season_id', sid)
+      : supabase.from('season_reviews').insert(payload)
+    const { error } = await fn
+    if (!error) { setExisting(true); setAutoSaveStatus('saved') }
+    else setAutoSaveStatus('')
+  }
+
+  // Autosave — fires 2s after last change
+  useEffect(() => {
+    if (!initialLoadDone.current || !userId || !seasonId) return
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+    setAutoSaveStatus('')
+    const snapshot = { teamReflections, proud, hard, newSkill, gap, coachTheme, letter, ratings }
+    autoSaveTimer.current = setTimeout(() => autoSave(userId, seasonId, existingRef.current, snapshot), 2000)
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current) }
+  }, [proud, hard, newSkill, gap, coachTheme, letter, ratings, teamReflections, userId, seasonId])
 
   function setTeamText(teamId: string, text: string) {
     setTeamReflections(prev => ({ ...prev, [teamId]: { ...prev[teamId], text, rating: prev[teamId]?.rating || 0 } }))
@@ -103,6 +147,7 @@ export default function SeasonReviewPage() {
     if (error) { showToast('Error saving'); console.error(error); setSaving(false); setAiLoading(false); return }
 
     setExisting(true)
+    setAutoSaveStatus('saved')
     showToast('Season review saved ✓')
 
     // AI feedback
@@ -241,9 +286,16 @@ export default function SeasonReviewPage() {
         </div>
       )}
 
+      {/* Autosave status */}
+      {autoSaveStatus && (
+        <div style={{ textAlign: 'center', marginBottom: '8px', fontSize: '13px', fontFamily: 'DM Mono', color: 'var(--muted)', letterSpacing: '0.5px' }}>
+          {autoSaveStatus === 'saving' ? '· saving...' : '· autosaved ✓'}
+        </div>
+      )}
+
       <button onClick={handleSave} disabled={saving}
         style={{ width: '100%', padding: '16px', background: saving ? 'var(--border)' : 'linear-gradient(135deg,#ffb347,#e8ff47)', border: 'none', borderRadius: '10px', color: 'var(--surface)', fontFamily: 'Bebas Neue', fontSize: '22px', letterSpacing: '3px', cursor: saving ? 'not-allowed' : 'pointer', marginBottom: '24px' }}>
-        {saving ? 'Saving...' : 'Save My Season Review'}
+        {saving ? 'Saving...' : 'Save & Get AI Feedback'}
       </button>
 
       {toast && <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent)', color: 'var(--surface)', padding: '14px 24px', borderRadius: '10px', fontFamily: 'Bebas Neue', fontSize: '16px', letterSpacing: '1.5px', zIndex: 300 }}>{toast}</div>}

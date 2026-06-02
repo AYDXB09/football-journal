@@ -248,8 +248,14 @@ export default function SetupPage() {
 
             {modal === 'season' && <>
               <FG label="Season Label (e.g. 2024-25)"><input value={f('label')} onChange={e => set('label', e.target.value)} placeholder="2024-25" /></FG>
-              <FG label="Start Date"><input type="date" value={f('start_date')} onChange={e => set('start_date', e.target.value)} /></FG>
-              <FG label="End Date"><input type="date" value={f('end_date')} onChange={e => set('end_date', e.target.value)} /></FG>
+              <FG label="Start Date">
+                <input type="date" value={f('start_date')} onChange={e => set('start_date', e.target.value)} />
+                {f('start_date') && <div style={{ fontSize: '12px', fontFamily: 'DM Mono', color: 'var(--accent)', marginTop: '5px' }}>{formatDate(f('start_date'))}</div>}
+              </FG>
+              <FG label="End Date">
+                <input type="date" value={f('end_date')} onChange={e => set('end_date', e.target.value)} />
+                {f('end_date') && <div style={{ fontSize: '12px', fontFamily: 'DM Mono', color: 'var(--accent)', marginTop: '5px' }}>{formatDate(f('end_date'))}</div>}
+              </FG>
               <FG label="Active Season?">
                 <select value={f('is_active') || 'false'} onChange={e => set('is_active', e.target.value)}>
                   <option value="true">Yes — current season</option>
@@ -311,8 +317,14 @@ export default function SetupPage() {
                   <option value="trial">Trial</option>
                 </select>
               </FG>
-              <FG label="Start Date"><input type="date" value={f('start_date')} onChange={e => set('start_date', e.target.value)} /></FG>
-              <FG label="End Date"><input type="date" value={f('end_date')} onChange={e => set('end_date', e.target.value)} /></FG>
+              <FG label="Start Date">
+                <input type="date" value={f('start_date')} onChange={e => set('start_date', e.target.value)} />
+                {f('start_date') && <div style={{ fontSize: '12px', fontFamily: 'DM Mono', color: 'var(--accent)', marginTop: '5px' }}>{formatDate(f('start_date'))}</div>}
+              </FG>
+              <FG label="End Date">
+                <input type="date" value={f('end_date')} onChange={e => set('end_date', e.target.value)} />
+                {f('end_date') && <div style={{ fontSize: '12px', fontFamily: 'DM Mono', color: 'var(--accent)', marginTop: '5px' }}>{formatDate(f('end_date'))}</div>}
+              </FG>
             </>}
 
             {modal === 'teammate' && <>

@@ -3,6 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { today, formatDate } from '@/lib/utils/format'
+import { WordCloud } from '@/components/ui/WordCloud'
+
+type TrainingChips = { focus_areas: string[]; reflection_notes: string[] }
 
 type Team = { id: string; team_label: string }
 type Season = { id: string; label: string; is_active: boolean }
@@ -40,6 +43,12 @@ export default function LogTrainingPage() {
   const [rating, setRating] = useState(7)
   const [notes, setNotes] = useState('')
 
+  const refFocus = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null)
+  const refNotes = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null)
+  const [trainingChips, setTrainingChips] = useState<TrainingChips | null>(null)
+  const [chipsLoading, setChipsLoading] = useState(false)
+  const chipsFetched = useRef(false)
+
   // Autosave
   const [savedTrainingId, setSavedTrainingId] = useState<string | null>(null)
   const [autoSaveStatus, setAutoSaveStatus] = useState<'' | 'saving' | 'saved'>('')
@@ -48,6 +57,31 @@ export default function LogTrainingPage() {
   useEffect(() => { savedTrainingIdRef.current = savedTrainingId }, [savedTrainingId])
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
+
+  // Fetch AI chips when session type changes (or on first load)
+  useEffect(() => {
+    if (!userId) return
+    chipsFetched.current = false
+    setTrainingChips(null)
+  }, [sessionType])
+
+  useEffect(() => {
+    if (!userId || chipsFetched.current) return
+    chipsFetched.current = true
+    setChipsLoading(true)
+    fetch('/api/ai/chip-suggestions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'training',
+        context: { session_type: sessionType, duration: parseInt(duration), coach_led: coachLed === 'yes' },
+      }),
+    })
+      .then(r => r.json())
+      .then(d => { if (d.chips) setTrainingChips(d.chips) })
+      .catch(err => console.error('Chip fetch error', err))
+      .finally(() => setChipsLoading(false))
+  }, [userId, sessionType])
 
   const loadTrainings = useCallback(async (uid: string) => {
     const { data } = await supabase.from('training_sessions').select('*, teams(team_label)').eq('player_id', uid).order('date', { ascending: false }).limit(20)
@@ -149,14 +183,25 @@ export default function LogTrainingPage() {
             <FG label="Duration (mins)"><input type="number" value={duration} onChange={e => setDuration(e.target.value)} min="15" max="180" /></FG>
             <FG label="Session Type"><select value={sessionType} onChange={e => setSessionType(e.target.value)}>{SESSION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select></FG>
             <FG label="Coach Led?"><select value={coachLed} onChange={e => setCoachLed(e.target.value)}><option value="yes">Yes</option><option value="no">No — solo</option></select></FG>
-            <div style={{ gridColumn: '1/-1' }}><FG label="What We Worked On (comma separated)"><input value={focusAreas} onChange={e => setFocusAreas(e.target.value)} placeholder="e.g. Pressing triggers, finishing, set pieces" /></FG></div>
+            <div style={{ gridColumn: '1/-1' }}>
+              <FG label="What We Worked On (comma separated)">
+                <input ref={refFocus as React.RefObject<HTMLInputElement>} value={focusAreas} onChange={e => setFocusAreas(e.target.value)} placeholder="e.g. Pressing triggers, finishing, set pieces" />
+                {chipsLoading && <div style={{ fontSize: '12px', fontFamily: 'DM Mono', color: 'var(--muted)', marginTop: '6px' }}>⚡ generating suggestions...</div>}
+                {trainingChips?.focus_areas && <WordCloud chips={trainingChips.focus_areas} inputRef={refFocus} value={focusAreas} onChange={setFocusAreas} separator=", " />}
+              </FG>
+            </div>
             <div style={{ gridColumn: '1/-1' }}>
               <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontFamily: 'DM Mono', letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '7px' }}>
                 <span>My Rating</span><span style={{ color: 'var(--accent)', fontFamily: 'Bebas Neue', fontSize: '22px' }}>{rating}/10</span>
               </label>
               <input type="range" min="1" max="10" value={rating} onChange={e => setRating(parseInt(e.target.value))} />
             </div>
-            <div style={{ gridColumn: '1/-1' }}><FG label="My Reflection"><textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="What did you take away? What clicked? What still needs work?" style={{ minHeight: '100px' }} /></FG></div>
+            <div style={{ gridColumn: '1/-1' }}>
+              <FG label="My Reflection">
+                <textarea ref={refNotes as React.RefObject<HTMLTextAreaElement>} value={notes} onChange={e => setNotes(e.target.value)} placeholder="What did you take away? What clicked? What still needs work?" style={{ minHeight: '100px' }} />
+                {trainingChips?.reflection_notes && <WordCloud chips={trainingChips.reflection_notes} inputRef={refNotes} value={notes} onChange={setNotes} />}
+              </FG>
+            </div>
           </div>
         </div>
 

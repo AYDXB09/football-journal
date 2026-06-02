@@ -1,7 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+import { callGemini } from '@/lib/utils/gemini'
 
 export async function POST(request: Request) {
   try {
@@ -25,13 +23,7 @@ Season review:
 
 Write a personalised end-of-season coach message — 4-5 sentences. Acknowledge specific things they mentioned, validate their honesty about the gap, and send them into the summer with clear direction. Do not use bullet points — just flowing coach voice.`
 
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 400,
-      messages: [{ role: 'user', content: prompt }],
-    })
-
-    const feedback = message.content[0].type === 'text' ? message.content[0].text : ''
+    const feedback = await callGemini(prompt, 400)
     return NextResponse.json({ feedback })
   } catch (error) {
     console.error('AI season feedback error:', error)

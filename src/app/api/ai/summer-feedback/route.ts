@@ -1,7 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+import { callGemini } from '@/lib/utils/gemini'
 
 export async function POST(request: Request) {
   try {
@@ -24,13 +22,7 @@ Summer plan:
 
 Give an honest assessment of this plan in 3-4 sentences — what's strong about it, what might be missing or imbalanced, and one concrete suggestion to make it more effective. Do not use bullet points — just flowing coach voice.`
 
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 350,
-      messages: [{ role: 'user', content: prompt }],
-    })
-
-    const feedback = message.content[0].type === 'text' ? message.content[0].text : ''
+    const feedback = await callGemini(prompt, 350)
     return NextResponse.json({ feedback })
   } catch (error) {
     console.error('AI summer feedback error:', error)

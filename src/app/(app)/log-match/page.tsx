@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { today } from '@/lib/utils/format'
+import { WordCloud } from '@/components/ui/WordCloud'
+
+type MatchChips = { went_well: string[]; improve_next: string[]; key_moment: string[]; coach_feedback: string[] }
 
 type Season = { id: string; label: string; is_active: boolean }
 type Team = { id: string; team_label: string; season_id: string }
@@ -70,11 +73,20 @@ export default function LogMatchPage() {
   // Ratings
   const [ratings, setRatings] = useState<Record<string, number>>({})
 
+  // AI chips
+  const [matchChips, setMatchChips] = useState<MatchChips | null>(null)
+  const [chipsLoading, setChipsLoading] = useState(false)
+  const chipsFetched = useRef(false)
+
   // Reflection
   const [reflWell, setReflWell] = useState('')
   const [reflImprove, setReflImprove] = useState('')
   const [reflMoment, setReflMoment] = useState('')
   const [reflCoach, setReflCoach] = useState('')
+  const refWell = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null)
+  const refImprove = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null)
+  const refMoment = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null)
+  const refCoach = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null)
   const [aiText, setAiText] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
 
@@ -102,6 +114,26 @@ export default function LogMatchPage() {
       if (active) setSeasonId(active.id)
     })
   }, [supabase])
+
+  // Fetch AI chips once opponent + team are filled
+  useEffect(() => {
+    if (!opponent || !teamId || chipsFetched.current) return
+    chipsFetched.current = true
+    setChipsLoading(true)
+    const result = goalsFor > goalsAgainst ? 'W' : goalsFor < goalsAgainst ? 'L' : 'D'
+    fetch('/api/ai/chip-suggestions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'match',
+        context: { opponent, result, goals_for: goalsFor, goals_against: goalsAgainst, position: posRows[0]?.position, mood },
+      }),
+    })
+      .then(r => r.json())
+      .then(d => { if (d.chips) setMatchChips(d.chips) })
+      .catch(err => console.error('Chip fetch error', err))
+      .finally(() => setChipsLoading(false))
+  }, [opponent, teamId])
 
   function onTeamChange(tid: string) {
     setTeamId(tid)
@@ -353,11 +385,26 @@ export default function LogMatchPage() {
         {/* Reflection */}
         <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
           <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '1.5px', marginBottom: '16px' }}>💬 My Reflection</div>
+          {chipsLoading && (
+            <div style={{ fontSize: '12px', fontFamily: 'DM Mono', color: 'var(--muted)', marginBottom: '12px', letterSpacing: '0.5px' }}>⚡ generating suggestions...</div>
+          )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <FG label="🌟 One thing I did really well today"><textarea value={reflWell} onChange={e => setReflWell(e.target.value)} placeholder="Be specific — what exactly did you do well?" style={{ minHeight: '80px' }} /></FG>
-            <FG label="🎯 One thing I want to improve next time"><textarea value={reflImprove} onChange={e => setReflImprove(e.target.value)} placeholder="What specific situation could you handle differently?" style={{ minHeight: '80px' }} /></FG>
-            <FG label="🎬 Moment of the Match"><textarea value={reflMoment} onChange={e => setReflMoment(e.target.value)} placeholder="Describe a specific moment — good or bad" style={{ minHeight: '80px' }} /></FG>
-            <FG label="📋 Coach Feedback"><textarea value={reflCoach} onChange={e => setReflCoach(e.target.value)} placeholder="What did the coach say?" style={{ minHeight: '80px' }} /></FG>
+            <FG label="🌟 One thing I did really well today">
+              <textarea ref={refWell as React.RefObject<HTMLTextAreaElement>} value={reflWell} onChange={e => setReflWell(e.target.value)} placeholder="Be specific — what exactly did you do well?" style={{ minHeight: '80px' }} />
+              {matchChips?.went_well && <WordCloud chips={matchChips.went_well} inputRef={refWell} value={reflWell} onChange={setReflWell} />}
+            </FG>
+            <FG label="🎯 One thing I want to improve next time">
+              <textarea ref={refImprove as React.RefObject<HTMLTextAreaElement>} value={reflImprove} onChange={e => setReflImprove(e.target.value)} placeholder="What specific situation could you handle differently?" style={{ minHeight: '80px' }} />
+              {matchChips?.improve_next && <WordCloud chips={matchChips.improve_next} inputRef={refImprove} value={reflImprove} onChange={setReflImprove} />}
+            </FG>
+            <FG label="🎬 Moment of the Match">
+              <textarea ref={refMoment as React.RefObject<HTMLTextAreaElement>} value={reflMoment} onChange={e => setReflMoment(e.target.value)} placeholder="Describe a specific moment — good or bad" style={{ minHeight: '80px' }} />
+              {matchChips?.key_moment && <WordCloud chips={matchChips.key_moment} inputRef={refMoment} value={reflMoment} onChange={setReflMoment} />}
+            </FG>
+            <FG label="📋 Coach Feedback">
+              <textarea ref={refCoach as React.RefObject<HTMLTextAreaElement>} value={reflCoach} onChange={e => setReflCoach(e.target.value)} placeholder="What did the coach say?" style={{ minHeight: '80px' }} />
+              {matchChips?.coach_feedback && <WordCloud chips={matchChips.coach_feedback} inputRef={refCoach} value={reflCoach} onChange={setReflCoach} />}
+            </FG>
           </div>
           {(aiText || aiLoading) && (
             <div style={{ background: 'rgba(232,255,71,0.05)', border: '1px solid rgba(232,255,71,0.2)', borderRadius: '10px', padding: '16px', marginTop: '16px' }}>

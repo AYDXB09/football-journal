@@ -1,7 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+import { callGemini } from '@/lib/utils/gemini'
 
 export async function POST(request: Request) {
   try {
@@ -27,13 +25,7 @@ Player reflection:
 
 Give 3-4 sentences of coach-voice feedback. Be specific to what they shared. Acknowledge what went well, address the improvement area, and leave them with something concrete to work on. Do not use bullet points or headers — just flowing coach voice.`
 
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 300,
-      messages: [{ role: 'user', content: prompt }],
-    })
-
-    const feedback = message.content[0].type === 'text' ? message.content[0].text : ''
+    const feedback = await callGemini(prompt, 300)
     return NextResponse.json({ feedback })
   } catch (error) {
     console.error('AI match feedback error:', error)

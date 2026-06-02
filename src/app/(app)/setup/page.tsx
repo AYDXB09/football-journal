@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { formatDate } from '@/lib/utils/format'
 
 // ── Types ──
 type Season = { id: string; label: string; start_date: string | null; end_date: string | null; is_active: boolean }
@@ -159,7 +160,7 @@ export default function SetupPage() {
         </div>
         {seasons.length === 0 ? empty('No seasons yet') : seasons.map(s => (
           <Row key={s.id} label={s.label}
-            sub={[s.start_date, s.end_date].filter(Boolean).join(' → ') + (s.is_active ? ' · ✓ ACTIVE' : '')}
+            sub={[s.start_date ? formatDate(s.start_date) : null, s.end_date ? formatDate(s.end_date) : null].filter(Boolean).join(' → ') + (s.is_active ? ' · ✓ ACTIVE' : '')}
             onEdit={() => openModal('season', { label: s.label, start_date: s.start_date || '', end_date: s.end_date || '', is_active: String(s.is_active) }, s.id)}
             onDel={() => handleDelete('seasons', s.id)} />
         ))}

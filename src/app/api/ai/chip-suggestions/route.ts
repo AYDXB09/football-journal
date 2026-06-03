@@ -34,7 +34,7 @@ Rules:
 - key_moment: types of moments that happen in matches (neutral, not outcome-specific)
 - coach_feedback: short phrases a coach might say to this position
 - Use proper football terminology throughout`
-      maxTokens = 600
+      maxTokens = 1500
 
     } else if (type === 'training') {
       const { session_type, duration, coach_led } = context
@@ -55,7 +55,7 @@ Rules:
 - focus_areas: specific drills, techniques, or topics for ${session_type} sessions (2–4 words each)
 - reflection_notes: short phrases about how the session felt or what was learned (3–6 words)
 - All lowercase, football-specific, no full sentences`
-      maxTokens = 400
+      maxTokens = 800
 
     } else {
       return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
@@ -65,7 +65,13 @@ Rules:
 
     // Strip markdown code fences if Gemini wraps the JSON
     const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
-    const chips = JSON.parse(cleaned)
+    let chips
+    try {
+      chips = JSON.parse(cleaned)
+    } catch (parseErr) {
+      console.error('Chip JSON parse error. Raw response:', raw)
+      throw parseErr
+    }
     return NextResponse.json({ chips })
 
   } catch (error) {

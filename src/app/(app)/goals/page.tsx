@@ -90,7 +90,7 @@ export default function GoalsPage() {
       {/* Add Form */}
       <form onSubmit={handleAdd}>
         <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
-          <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '1.5px', marginBottom: '16px' }}>🎯 Add Focus Goal</div>
+          <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '1.5px', marginBottom: '16px' }}>🎯 Add Objective</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
             <FG label="Season">
               <select value={seasonId} onChange={e => { setSeasonId(e.target.value); if (userId) loadGoals(userId, e.target.value) }}>
@@ -127,14 +127,14 @@ export default function GoalsPage() {
           </div>
         </div>
         <button type="submit" disabled={saving} style={{ width: '100%', padding: '16px', background: saving ? 'var(--border)' : 'var(--accent)', border: 'none', borderRadius: '10px', color: 'var(--surface)', fontFamily: 'Bebas Neue', fontSize: '22px', letterSpacing: '3px', cursor: saving ? 'not-allowed' : 'pointer', marginBottom: '28px' }}>
-          {saving ? 'Saving...' : 'Add Focus Goal'}
+          {saving ? 'Saving...' : 'Add Objective'}
         </button>
       </form>
 
-      {/* Active Goals */}
-      <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '2px', color: 'var(--muted)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>Active Goals <span style={{ color: 'var(--accent)' }}>({active.length})</span><span style={{ flex: 1, height: '1px', background: 'var(--border)', display: 'block' }} /></div>
+      {/* Active Objectives */}
+      <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '2px', color: 'var(--muted)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>Active Objectives <span style={{ color: 'var(--accent)' }}>({active.length})</span><span style={{ flex: 1, height: '1px', background: 'var(--border)', display: 'block' }} /></div>
       {active.length === 0
-        ? <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '10px', padding: '24px', textAlign: 'center', color: 'var(--muted)', fontFamily: 'DM Mono', fontSize: '14px', marginBottom: '24px' }}>No active goals — add one above</div>
+        ? <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '10px', padding: '24px', textAlign: 'center', color: 'var(--muted)', fontFamily: 'DM Mono', fontSize: '14px', marginBottom: '24px' }}>No active objectives — add one above</div>
         : active.map(g => (
           <div key={g.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: '3px solid var(--accent)', borderRadius: '8px', padding: '14px 16px', marginBottom: '10px' }}>
             <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '6px', lineHeight: 1.4 }}>{g.text}</div>

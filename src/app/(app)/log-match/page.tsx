@@ -4,11 +4,12 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { today } from '@/lib/utils/format'
 import { WordCloud } from '@/components/ui/WordCloud'
+import GoalContributionCard, { type GoalState } from '@/components/GoalContributionCard'
 
 type MatchChips = { went_well: string[]; improve_next: string[]; key_moment: string[]; coach_feedback: string[] }
 
 type Season = { id: string; label: string; is_active: boolean }
-type Team = { id: string; team_label: string; season_id: string }
+type Team = { id: string; team_label: string; season_id: string; format: string | null }
 type Competition = { id: string; name: string; team_id: string }
 type Teammate = { id: string; name: string; nickname: string | null; team_id: string }
 
@@ -41,6 +42,10 @@ export default function LogMatchPage() {
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState('')
   const [saved, setSaved] = useState(false)
+  const [contributions, setContributions] = useState<GoalState[]>([])
+  const [contributionsSaved, setContributionsSaved] = useState(false)
+  const [goalModalOpen, setGoalModalOpen] = useState(false)
+  const [teamFormat, setTeamFormat] = useState<string>('7v7')
 
   // Autosave
   const [savedMatchId, setSavedMatchId] = useState<string | null>(null)
@@ -62,8 +67,10 @@ export default function LogMatchPage() {
   const [venue, setVenue] = useState('home')
   const [goalsFor, setGoalsFor] = useState('')
   const [goalsAgainst, setGoalsAgainst] = useState('')
+  const [myGoals, setMyGoals] = useState('')
   const gf = parseInt(goalsFor) || 0
   const ga = parseInt(goalsAgainst) || 0
+  const myGf = parseInt(myGoals) || 0
   const [totalMins, setTotalMins] = useState(60)
   const [minsPlayed, setMinsPlayed] = useState(60)
   const [mood, setMood] = useState('')
@@ -103,7 +110,7 @@ export default function LogMatchPage() {
       setUserId(user.id)
       const [sr, tr, cr, mr] = await Promise.all([
         supabase.from('seasons').select('id, label, is_active').eq('player_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('teams').select('id, team_label, season_id').eq('player_id', user.id),
+        supabase.from('teams').select('id, team_label, season_id, format').eq('player_id', user.id),
         supabase.from('competitions').select('id, name, team_id').eq('player_id', user.id),
         supabase.from('teammates').select('id, name, nickname, team_id').eq('player_id', user.id),
       ])
@@ -141,6 +148,8 @@ export default function LogMatchPage() {
     setTeamId(tid)
     setCompId('')
     setFilteredComps(competitions.filter(c => c.team_id === tid))
+    const found = teams.find(t => t.id === tid)
+    if (found?.format) setTeamFormat(found.format)
   }
 
   function getDims() {
@@ -162,6 +171,37 @@ export default function LogMatchPage() {
     if (gf > ga) return 'W'
     if (gf < ga) return 'L'
     return 'D'
+  }
+
+  function deriveZone(x: number, y: number): string {
+    return `${y < 1/3 ? 'Top' : y < 2/3 ? 'Mid' : 'Low'} ${x < 1/3 ? 'Left' : x < 2/3 ? 'Centre' : 'Right'}`
+  }
+
+  const P_W_LM = 300, P_H_LM = 175, P_GL_LM = 16
+  const PITCH_FORMATS_LM: Record<string, { pitchW: number; goalW: number; penW: number; penH: number; sixW: number; sixH: number }> = {
+    '5v5':  { pitchW: 37, goalW: 3.66, penW: 22,    penH: 7,    sixW: 8,    sixH: 3   },
+    '7v7':  { pitchW: 46, goalW: 5,    penW: 28,    penH: 10,   sixW: 12,   sixH: 4   },
+    '9v9':  { pitchW: 61, goalW: 6,    penW: 37,    penH: 13,   sixW: 16,   sixH: 5   },
+    '11v11':{ pitchW: 68, goalW: 7.32, penW: 40.32, penH: 16.5, sixW: 18.32,sixH: 5.5 },
+  }
+
+  function pitchZoneLabel(x: number, y: number, fmt: string): string {
+    const pf = PITCH_FORMATS_LM[fmt] || PITCH_FORMATS_LM['7v7']
+    const ppx = P_W_LM / pf.pitchW
+    const cx = P_W_LM / 2
+    const penW = pf.penW * ppx, penH = pf.penH * ppx, sixH = pf.sixH * ppx
+    const penX1 = cx - penW / 2, penX2 = cx + penW / 2
+    const col = x < penX1 ? 'Left wing'
+              : x > penX2 ? 'Right wing'
+              : x < cx - penW / 6 ? 'Left channel'
+              : x > cx + penW / 6 ? 'Right channel'
+              : 'Centre'
+    const depth = y - P_GL_LM
+    const row = depth < sixH      ? 'Goal area'
+              : depth < penH      ? 'Penalty area'
+              : depth < penH + 45 ? 'Edge of box'
+              : 'Outside box'
+    return `${col} · ${row}`
   }
 
   // Autosave — creates/updates match + reflection only (positions/ratings/video handled on full submit)
@@ -279,6 +319,28 @@ export default function LogMatchPage() {
       await supabase.from('match_video_moments').insert(validVideos.map(v => ({ match_id: matchId, url: v.url, timestamp_in_video: v.timestamp || null, label: v.label || null, moment_type: v.type as 'highlight' || null })))
     }
 
+    // Goal contributions
+    if (contributions.length > 0 && matchId) {
+      await supabase.from('match_contributions').insert(
+        contributions.map((g, i) => ({
+          match_id: matchId,
+          player_id: userId,
+          goal_index: i + 1,
+          goal_type: g.goalType,
+          ball_x: g.ballX, ball_y: g.ballY,
+          ball_zone: g.ballX != null ? deriveZone(g.ballX, g.ballY!) : null,
+          keeper_x_pct: g.keeperXPct,
+          keeper_posture: g.keeperPosture,
+          body_part: g.bodyPart, technique: g.technique,
+          score_us: g.scoreUs, score_opp: g.scoreOpp,
+          period: g.period,
+          shot_x: g.shotX, shot_y: g.shotY,
+          shot_zone: g.shotX != null ? pitchZoneLabel(g.shotX, g.shotY!, teamFormat) : null,
+          video_url: g.videoUrl || null,
+        }))
+      )
+    }
+
     showToast('Match saved ✓')
     setSaved(true)
     setAutoSaveStatus('saved')
@@ -323,26 +385,87 @@ export default function LogMatchPage() {
             <FG label=""><div /></FG>
             <FG label="Our Goals"><input type="number" value={goalsFor} onChange={e => setGoalsFor(e.target.value)} placeholder="0" min="0" max="20" /></FG>
             <FG label="Their Goals"><input type="number" value={goalsAgainst} onChange={e => setGoalsAgainst(e.target.value)} placeholder="0" min="0" max="20" /></FG>
+            <FG label="My Goals ⚽" full>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <input
+                  type="number"
+                  value={myGoals}
+                  onChange={e => {
+                    const n = parseInt(e.target.value)
+                    if (!isNaN(n) && gf > 0 && n > gf) setMyGoals(String(gf))
+                    else setMyGoals(e.target.value)
+                  }}
+                  placeholder="0"
+                  min="0"
+                  max={gf || 20}
+                  style={{ width: '80px' }}
+                />
+                {myGf > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setGoalModalOpen(true)}
+                    style={{ padding: '10px 16px', background: contributionsSaved ? 'rgba(52,211,153,0.1)' : 'rgba(232,255,71,0.08)', border: `1px solid ${contributionsSaved ? '#34d399' : 'var(--accent)'}`, borderRadius: '8px', color: contributionsSaved ? '#34d399' : 'var(--accent)', fontFamily: 'Bebas Neue', fontSize: '16px', letterSpacing: '1.5px', cursor: 'pointer', whiteSpace: 'nowrap' as const }}
+                  >
+                    {contributionsSaved ? `✓ Details Saved` : `⚽ Record My ${myGf === 1 ? 'Goal' : `${myGf} Goals`}`}
+                  </button>
+                )}
+              </div>
+            </FG>
             <FG label="Total Match Time (mins)"><input type="number" value={totalMins} onChange={e => setTotalMins(parseInt(e.target.value) || 60)} min="10" max="120" /></FG>
             <FG label="My Time Played (mins)"><input type="number" value={minsPlayed} onChange={e => setMinsPlayed(parseInt(e.target.value) || 60)} min="0" max="120" /></FG>
           </div>
         </div>
+
+        {/* Goal Detail Modal */}
+        {goalModalOpen && (
+          <div
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px 16px', overflowY: 'auto' }}
+            onClick={e => { if (e.target === e.currentTarget) setGoalModalOpen(false) }}
+          >
+            <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '700px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Modal header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontFamily: 'Bebas Neue', fontSize: '22px', letterSpacing: '2px', color: 'var(--accent)' }}>⚽ My Goal Details</div>
+                <button type="button" onClick={() => setGoalModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '22px', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+              </div>
+              <GoalContributionCard
+                goalCount={myGf}
+                format={(teamFormat as '5v5' | '7v7' | '9v9' | '11v11') || '7v7'}
+                onChange={setContributions}
+              />
+              {/* Modal save button */}
+              <button
+                type="button"
+                onClick={() => { setContributionsSaved(true); setGoalModalOpen(false) }}
+                style={{ padding: '14px', background: 'var(--accent)', border: 'none', borderRadius: '10px', color: 'var(--surface)', fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '3px', cursor: 'pointer' }}
+              >
+                Save Goal Details
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Positions */}
         <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
           <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '1.5px', marginBottom: '8px' }}>🔢 Positions Played</div>
           <p style={{ fontSize: '15px', color: 'var(--muted)', marginBottom: '14px' }}>Add each position with time range — split if you changed roles.</p>
           {posRows.map((row, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px auto', gap: '10px', marginBottom: '10px', alignItems: 'center' }}>
-              <select value={row.position} onChange={e => updatePosRow(i, 'position', e.target.value)} style={{ fontSize: '17px', padding: '10px 12px' }}>
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: 'minmax(90px,130px) 66px 66px 32px auto', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+              <select value={row.position} onChange={e => updatePosRow(i, 'position', e.target.value)} style={{ fontSize: '15px', padding: '8px 10px' }}>
                 {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
-              <input type="number" placeholder="From" min="0" max="120" value={row.from} onChange={e => updatePosRow(i, 'from', e.target.value)} style={{ fontSize: '16px', padding: '10px 12px' }} />
-              <input type="number" placeholder="To" min="0" max="120" value={row.to} onChange={e => updatePosRow(i, 'to', e.target.value)} style={{ fontSize: '16px', padding: '10px 12px' }} />
-              <button type="button" onClick={() => removePosRow(i)} style={{ background: 'transparent', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '18px', minWidth: '36px', minHeight: '36px' }}>✕</button>
+              <input type="number" placeholder="From" min="0" max="120" value={row.from} onChange={e => updatePosRow(i, 'from', e.target.value)} style={{ fontSize: '15px', padding: '8px' }} />
+              <input type="number" placeholder="To" min="0" max="120" value={row.to} onChange={e => updatePosRow(i, 'to', e.target.value)} style={{ fontSize: '15px', padding: '8px' }} />
+              <button type="button" onClick={() => removePosRow(i)} style={{ background: 'transparent', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '16px', minWidth: '32px', minHeight: '32px' }}>✕</button>
+              {i === posRows.length - 1
+                ? <button type="button" onClick={addPosRow} style={{ background: 'transparent', border: '1px dashed var(--border)', color: 'var(--muted)', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Mono', whiteSpace: 'nowrap' as const, minHeight: '36px' }}>+ Add</button>
+                : <div />
+              }
             </div>
           ))}
-          <button type="button" onClick={addPosRow} style={{ background: 'transparent', border: '1px dashed var(--border)', color: 'var(--muted)', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '15px', fontFamily: 'DM Mono', width: '100%', minHeight: '44px', marginTop: '4px' }}>+ Add Position</button>
+          {posRows.length === 0 && (
+            <button type="button" onClick={addPosRow} style={{ background: 'transparent', border: '1px dashed var(--border)', color: 'var(--muted)', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontFamily: 'DM Mono' }}>+ Add Position</button>
+          )}
         </div>
 
         {/* Mood */}
@@ -383,6 +506,7 @@ export default function LogMatchPage() {
             <input type="range" min="1" max="10" value={overallRating} onChange={e => setOverallRating(parseInt(e.target.value))} />
           </div>
         </div>
+
 
         {/* Reflection */}
         <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>

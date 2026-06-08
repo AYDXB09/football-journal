@@ -14,7 +14,7 @@ const NAV_ITEMS = [
   { href: '/log-training', label: 'Training' },
   { href: '/diagnostic', label: 'Diagnostic' },
   { href: '/matches', label: 'Matches' },
-  { href: '/goals', label: 'Goals' },
+  { href: '/goals', label: 'Objectives' },
   { href: '/season-review', label: '⚡ Season', accent: '#ffb347' },
   { href: '/summer-plan', label: '☀️ Summer', accent: '#5ac8fa' },
   { href: '/journey', label: '🌟 Journey', accent: '#c084fc' },

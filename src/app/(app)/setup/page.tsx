@@ -7,7 +7,7 @@ import { formatDate } from '@/lib/utils/format'
 // ── Types ──
 type Season = { id: string; label: string; start_date: string | null; end_date: string | null; is_active: boolean }
 type Club = { id: string; name: string; logo_url: string | null; has_professional_pathway: boolean }
-type Team = { id: string; team_label: string; age_group: string; club_id: string; season_id: string; kit_primary_colour: string | null; kit_secondary_colour: string | null; training_hours_per_week: number | null; league_level: string | null; clubs?: { name: string } | null; seasons?: { label: string } | null }
+type Team = { id: string; team_label: string; age_group: string; club_id: string; season_id: string; kit_primary_colour: string | null; kit_secondary_colour: string | null; training_hours_per_week: number | null; league_level: string | null; format: string | null; clubs?: { name: string } | null; seasons?: { label: string } | null }
 type Competition = { id: string; name: string; type: string | null; team_id: string; teams?: { team_label: string } | null }
 type Teammate = { id: string; name: string; nickname: string | null; kit_number: number | null; positions: string[] | null; team_id: string; teams?: { team_label: string } | null }
 type ModalType = 'season' | 'club' | 'team' | 'competition' | 'teammate' | null
@@ -99,7 +99,7 @@ export default function SetupPage() {
         showToast('Club saved ✓')
       }
       if (modal === 'team') {
-        const p = { player_id: userId, club_id: f('club_id'), season_id: f('season_id'), age_group: f('age_group'), team_label: f('team_label'), kit_primary_colour: f('kit_primary_colour') || null, kit_secondary_colour: f('kit_secondary_colour') || null, training_hours_per_week: f('training_hours_per_week') ? parseFloat(f('training_hours_per_week')) : null, league_level: f('league_level') || null }
+        const p = { player_id: userId, club_id: f('club_id'), season_id: f('season_id'), age_group: f('age_group'), team_label: f('team_label'), kit_primary_colour: f('kit_primary_colour') || null, kit_secondary_colour: f('kit_secondary_colour') || null, training_hours_per_week: f('training_hours_per_week') ? parseFloat(f('training_hours_per_week')) : null, league_level: f('league_level') || null, format: f('format') || null }
         editId ? await supabase.from('teams').update(p).eq('id', editId) : await supabase.from('teams').insert(p)
         showToast('Team saved ✓')
       }
@@ -195,7 +195,7 @@ export default function SetupPage() {
           : teams.map(t => (
             <Row key={t.id} label={t.team_label}
               sub={`${t.clubs?.name || ''} · ${t.seasons?.label || ''} · ${t.age_group}`}
-              onEdit={() => openModal('team', { team_label: t.team_label, age_group: t.age_group, club_id: t.club_id, season_id: t.season_id, kit_primary_colour: t.kit_primary_colour || '#162a1f', kit_secondary_colour: t.kit_secondary_colour || '#e8ff47', training_hours_per_week: String(t.training_hours_per_week || ''), league_level: t.league_level || '' }, t.id)}
+              onEdit={() => openModal('team', { team_label: t.team_label, age_group: t.age_group, club_id: t.club_id, season_id: t.season_id, kit_primary_colour: t.kit_primary_colour || '#162a1f', kit_secondary_colour: t.kit_secondary_colour || '#e8ff47', training_hours_per_week: String(t.training_hours_per_week || ''), league_level: t.league_level || '', format: t.format || '' }, t.id)}
               onDel={() => handleDelete('teams', t.id)} />
           ))}
       </div>
@@ -290,6 +290,15 @@ export default function SetupPage() {
                 </select>
               </FG>
               <FG label="Age Group (e.g. U9)"><input value={f('age_group')} onChange={e => set('age_group', e.target.value)} placeholder="U9" /></FG>
+              <FG label="Format">
+                <select value={f('format')} onChange={e => set('format', e.target.value)}>
+                  <option value="">— select format —</option>
+                  <option value="5v5">5v5</option>
+                  <option value="7v7">7v7</option>
+                  <option value="9v9">9v9</option>
+                  <option value="11v11">11v11</option>
+                </select>
+              </FG>
               <FG label="Team Label"><input value={f('team_label')} onChange={e => set('team_label', e.target.value)} placeholder="e.g. United FC U9" /></FG>
               <FG label="Training Hours / Week"><input type="number" value={f('training_hours_per_week')} onChange={e => set('training_hours_per_week', e.target.value)} placeholder="6" min="0" max="40" /></FG>
               <FG label="League Level"><input value={f('league_level')} onChange={e => set('league_level', e.target.value)} placeholder="e.g. UAE Pro Division" /></FG>

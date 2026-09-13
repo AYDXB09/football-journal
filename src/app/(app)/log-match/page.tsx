@@ -151,6 +151,13 @@ export default function LogMatchPage() {
       .finally(() => setChipsLoading(false))
   }, [opponent, teamId])
 
+  function onSeasonChange(sid: string) {
+    setSeasonId(sid)
+    setTeamId('')
+    setCompId('')
+    setFilteredComps([])
+  }
+
   function onTeamChange(tid: string) {
     setTeamId(tid)
     setCompId('')
@@ -380,6 +387,7 @@ export default function LogMatchPage() {
   }
 
   const dims = getDims()
+  const seasonTeams = seasonId ? teams.filter(t => t.season_id === seasonId) : teams
 
   return (
     <div>
@@ -389,8 +397,8 @@ export default function LogMatchPage() {
           <div style={{ fontFamily: 'Bebas Neue', fontSize: '20px', letterSpacing: '1.5px', marginBottom: '16px' }}>📅 Match Details</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
             <FG label="Date"><input type="date" value={date} onChange={e => setDate(e.target.value)} required /></FG>
-            <FG label="Season"><select value={seasonId} onChange={e => setSeasonId(e.target.value)} required><option value="">— select —</option>{seasons.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}</select></FG>
-            <FG label="Team"><select value={teamId} onChange={e => onTeamChange(e.target.value)} required><option value="">— select team —</option>{teams.map(t => <option key={t.id} value={t.id}>{t.team_label}</option>)}</select></FG>
+            <FG label="Season"><select value={seasonId} onChange={e => onSeasonChange(e.target.value)} required><option value="">— select —</option>{seasons.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}</select></FG>
+            <FG label="Team"><select value={teamId} onChange={e => onTeamChange(e.target.value)} required><option value="">— select team —</option>{seasonTeams.map(t => <option key={t.id} value={t.id}>{t.team_label}</option>)}</select></FG>
             <FG label="Competition"><select value={compId} onChange={e => onCompChange(e.target.value)}><option value="">— select —</option>{filteredComps.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></FG>
             <FG label="Stage"><select value={stage} onChange={e => setStage(e.target.value)}>{STAGES.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}</select></FG>
             <FG label="Venue"><select value={venue} onChange={e => setVenue(e.target.value)}><option value="home">Home</option><option value="away">Away</option><option value="neutral">Neutral</option></select></FG>

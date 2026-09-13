@@ -8,7 +8,7 @@ import { formatDate } from '@/lib/utils/format'
 type Season = { id: string; label: string; start_date: string | null; end_date: string | null; is_active: boolean | null }
 type Club = { id: string; name: string; logo_url: string | null; has_professional_pathway: boolean | null }
 type Team = { id: string; team_label: string; age_group: string; club_id: string; season_id: string; kit_primary_colour: string | null; kit_secondary_colour: string | null; training_hours_per_week: number | null; league_level: string | null; format: string | null; clubs?: { name: string } | null; seasons?: { label: string } | null }
-type Competition = { id: string; name: string; type: string | null; team_id: string; league_level: string | null; default_match_minutes: number | null; teams?: { team_label: string } | null }
+type Competition = { id: string; name: string; type: string | null; team_id: string; league_level: string | null; default_match_minutes: number | null; website: string | null; teams?: { team_label: string } | null }
 const MATCH_MIN_PRESETS = ['60', '75', '90']
 type Teammate = { id: string; name: string; nickname: string | null; kit_number: number | null; positions: string[] | null; team_id: string; teams?: { team_label: string } | null }
 type ModalType = 'season' | 'club' | 'team' | 'competition' | 'teammate' | null
@@ -17,11 +17,14 @@ type ModalType = 'season' | 'club' | 'team' | 'competition' | 'teammate' | null
 const smBtn: React.CSSProperties = { background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontFamily: 'DM Mono', fontSize: '12px', minHeight: '36px' }
 const dangerBtn: React.CSSProperties = { ...smBtn, color: 'var(--danger)' }
 
-function Row({ label, sub, onEdit, onDel }: { label: string; sub?: string; onEdit: () => void; onDel: () => void }) {
+function Row({ label, sub, link, onEdit, onDel }: { label: string; sub?: string; link?: string | null; onEdit: () => void; onDel: () => void }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '16px', fontWeight: 600 }}>{label}</div>
+        <div style={{ fontSize: '16px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {label}
+          {link && <a href={link} target="_blank" rel="noopener noreferrer" title={link} style={{ color: 'var(--accent)', textDecoration: 'none', fontSize: '14px' }}>🔗</a>}
+        </div>
         {sub && <div style={{ fontSize: '12px', color: 'var(--muted)', fontFamily: 'DM Mono', marginTop: '2px' }}>{sub}</div>}
       </div>
       <div style={{ display: 'flex', gap: '6px' }}>
@@ -114,7 +117,7 @@ export default function SetupPage() {
         } else if (minsOpt) {
           defaultMatchMinutes = parseInt(minsOpt, 10)
         }
-        const p = { player_id: userId, team_id: f('team_id'), season_id: teamSeasonId, name: f('name'), type: (f('type') || null) as 'league' | 'cup' | 'friendly' | 'trial' | 'tournament' | null, league_level: f('league_level') || null, default_match_minutes: defaultMatchMinutes, start_date: f('start_date') || null, end_date: f('end_date') || null }
+        const p = { player_id: userId, team_id: f('team_id'), season_id: teamSeasonId, name: f('name'), type: (f('type') || null) as 'league' | 'cup' | 'friendly' | 'trial' | 'tournament' | null, league_level: f('league_level') || null, default_match_minutes: defaultMatchMinutes, website: f('website') || null, start_date: f('start_date') || null, end_date: f('end_date') || null }
         editId ? await supabase.from('competitions').update(p).eq('id', editId) : await supabase.from('competitions').insert(p)
         showToast('Competition saved ✓')
       }
@@ -220,9 +223,10 @@ export default function SetupPage() {
         {teams.length === 0 ? empty('Add a team first')
           : competitions.length === 0 ? empty('No competitions yet')
           : competitions.map(c => (
-            <Row key={c.id} label={c.name} sub={[c.teams?.team_label, c.type, c.league_level, c.default_match_minutes ? `${c.default_match_minutes}min` : null].filter(Boolean).join(' · ')}
+            <Row key={c.id} label={c.name} link={c.website}
+              sub={[c.teams?.team_label, c.type, c.league_level, c.default_match_minutes ? `${c.default_match_minutes}min` : null].filter(Boolean).join(' · ')}
               onEdit={() => openModal('competition', {
-                name: c.name, type: c.type || '', team_id: c.team_id, league_level: c.league_level || '',
+                name: c.name, type: c.type || '', team_id: c.team_id, league_level: c.league_level || '', website: c.website || '',
                 default_match_minutes_option: c.default_match_minutes == null ? '' : MATCH_MIN_PRESETS.includes(String(c.default_match_minutes)) ? String(c.default_match_minutes) : 'custom',
                 default_match_minutes_custom: c.default_match_minutes != null && !MATCH_MIN_PRESETS.includes(String(c.default_match_minutes)) ? String(c.default_match_minutes) : '',
               }, c.id)}
@@ -350,6 +354,7 @@ export default function SetupPage() {
                 </select>
               </FG>
               <FG label="League Level"><input value={f('league_level')} onChange={e => set('league_level', e.target.value)} placeholder="e.g. UAE Pro Division" /></FG>
+              <FG label="Link (official league / competition page)"><input type="url" value={f('website')} onChange={e => set('website', e.target.value)} placeholder="e.g. https://uaefa.ae/en/competition/2615" /></FG>
               <FG label="Default Match Playing Time">
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <select value={f('default_match_minutes_option')} onChange={e => set('default_match_minutes_option', e.target.value)} style={{ flex: 1 }}>

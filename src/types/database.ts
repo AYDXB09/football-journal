@@ -324,6 +324,7 @@ export interface Database {
           type: 'league' | 'cup' | 'friendly' | 'trial' | 'tournament' | null
           league_level: string | null
           default_match_minutes: number | null
+          website: string | null
           start_date: string | null
           end_date: string | null
           notes: string | null
@@ -338,6 +339,7 @@ export interface Database {
           type?: 'league' | 'cup' | 'friendly' | 'trial' | 'tournament' | null
           league_level?: string | null
           default_match_minutes?: number | null
+          website?: string | null
           start_date?: string | null
           end_date?: string | null
           notes?: string | null
@@ -352,6 +354,7 @@ export interface Database {
           type?: 'league' | 'cup' | 'friendly' | 'trial' | 'tournament' | null
           league_level?: string | null
           default_match_minutes?: number | null
+          website?: string | null
           start_date?: string | null
           end_date?: string | null
           notes?: string | null

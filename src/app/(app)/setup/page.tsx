@@ -8,7 +8,8 @@ import { formatDate } from '@/lib/utils/format'
 type Season = { id: string; label: string; start_date: string | null; end_date: string | null; is_active: boolean }
 type Club = { id: string; name: string; logo_url: string | null; has_professional_pathway: boolean }
 type Team = { id: string; team_label: string; age_group: string; club_id: string; season_id: string; kit_primary_colour: string | null; kit_secondary_colour: string | null; training_hours_per_week: number | null; league_level: string | null; format: string | null; clubs?: { name: string } | null; seasons?: { label: string } | null }
-type Competition = { id: string; name: string; type: string | null; team_id: string; teams?: { team_label: string } | null }
+type Competition = { id: string; name: string; type: string | null; team_id: string; league_level: string | null; default_match_minutes: number | null; teams?: { team_label: string } | null }
+const MATCH_MIN_PRESETS = ['60', '75', '90']
 type Teammate = { id: string; name: string; nickname: string | null; kit_number: number | null; positions: string[] | null; team_id: string; teams?: { team_label: string } | null }
 type ModalType = 'season' | 'club' | 'team' | 'competition' | 'teammate' | null
 
@@ -99,13 +100,21 @@ export default function SetupPage() {
         showToast('Club saved ✓')
       }
       if (modal === 'team') {
-        const p = { player_id: userId, club_id: f('club_id'), season_id: f('season_id'), age_group: f('age_group'), team_label: f('team_label'), kit_primary_colour: f('kit_primary_colour') || null, kit_secondary_colour: f('kit_secondary_colour') || null, training_hours_per_week: f('training_hours_per_week') ? parseFloat(f('training_hours_per_week')) : null, league_level: f('league_level') || null, format: f('format') || null }
+        const p = { player_id: userId, club_id: f('club_id'), season_id: f('season_id'), age_group: f('age_group'), team_label: f('team_label'), kit_primary_colour: f('kit_primary_colour') || null, kit_secondary_colour: f('kit_secondary_colour') || null, format: f('format') || null }
         editId ? await supabase.from('teams').update(p).eq('id', editId) : await supabase.from('teams').insert(p)
         showToast('Team saved ✓')
       }
       if (modal === 'competition') {
         const teamSeasonId = teams.find(t => t.id === f('team_id'))?.season_id || ''
-        const p = { player_id: userId, team_id: f('team_id'), season_id: teamSeasonId, name: f('name'), type: f('type') || null, start_date: f('start_date') || null, end_date: f('end_date') || null }
+        const minsOpt = f('default_match_minutes_option')
+        let defaultMatchMinutes: number | null = null
+        if (minsOpt === 'custom') {
+          const n = parseInt(f('default_match_minutes_custom'), 10)
+          defaultMatchMinutes = Number.isNaN(n) ? null : n
+        } else if (minsOpt) {
+          defaultMatchMinutes = parseInt(minsOpt, 10)
+        }
+        const p = { player_id: userId, team_id: f('team_id'), season_id: teamSeasonId, name: f('name'), type: f('type') || null, league_level: f('league_level') || null, default_match_minutes: defaultMatchMinutes, start_date: f('start_date') || null, end_date: f('end_date') || null }
         editId ? await supabase.from('competitions').update(p).eq('id', editId) : await supabase.from('competitions').insert(p)
         showToast('Competition saved ✓')
       }
@@ -195,7 +204,7 @@ export default function SetupPage() {
           : teams.map(t => (
             <Row key={t.id} label={t.team_label}
               sub={`${t.clubs?.name || ''} · ${t.seasons?.label || ''} · ${t.age_group}`}
-              onEdit={() => openModal('team', { team_label: t.team_label, age_group: t.age_group, club_id: t.club_id, season_id: t.season_id, kit_primary_colour: t.kit_primary_colour || '#162a1f', kit_secondary_colour: t.kit_secondary_colour || '#e8ff47', training_hours_per_week: String(t.training_hours_per_week || ''), league_level: t.league_level || '', format: t.format || '' }, t.id)}
+              onEdit={() => openModal('team', { team_label: t.team_label, age_group: t.age_group, club_id: t.club_id, season_id: t.season_id, kit_primary_colour: t.kit_primary_colour || '#162a1f', kit_secondary_colour: t.kit_secondary_colour || '#e8ff47', format: t.format || '' }, t.id)}
               onDel={() => handleDelete('teams', t.id)} />
           ))}
       </div>
@@ -211,8 +220,12 @@ export default function SetupPage() {
         {teams.length === 0 ? empty('Add a team first')
           : competitions.length === 0 ? empty('No competitions yet')
           : competitions.map(c => (
-            <Row key={c.id} label={c.name} sub={`${c.teams?.team_label || ''} · ${c.type || ''}`}
-              onEdit={() => openModal('competition', { name: c.name, type: c.type || '', team_id: c.team_id }, c.id)}
+            <Row key={c.id} label={c.name} sub={[c.teams?.team_label, c.type, c.league_level, c.default_match_minutes ? `${c.default_match_minutes}min` : null].filter(Boolean).join(' · ')}
+              onEdit={() => openModal('competition', {
+                name: c.name, type: c.type || '', team_id: c.team_id, league_level: c.league_level || '',
+                default_match_minutes_option: c.default_match_minutes == null ? '' : MATCH_MIN_PRESETS.includes(String(c.default_match_minutes)) ? String(c.default_match_minutes) : 'custom',
+                default_match_minutes_custom: c.default_match_minutes != null && !MATCH_MIN_PRESETS.includes(String(c.default_match_minutes)) ? String(c.default_match_minutes) : '',
+              }, c.id)}
               onDel={() => handleDelete('competitions', c.id)} />
           ))}
       </div>
@@ -300,18 +313,18 @@ export default function SetupPage() {
                 </select>
               </FG>
               <FG label="Team Label"><input value={f('team_label')} onChange={e => set('team_label', e.target.value)} placeholder="e.g. United FC U9" /></FG>
-              <FG label="Training Hours / Week"><input type="number" value={f('training_hours_per_week')} onChange={e => set('training_hours_per_week', e.target.value)} placeholder="6" min="0" max="40" /></FG>
-              <FG label="League Level"><input value={f('league_level')} onChange={e => set('league_level', e.target.value)} placeholder="e.g. UAE Pro Division" /></FG>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <FG label="Kit Primary">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '6px', border: '2px solid var(--border)', background: f('kit_primary_colour') || '#162a1f', flexShrink: 0 }} />
+                    <input type="color" value={f('kit_primary_colour') || '#162a1f'} onChange={e => set('kit_primary_colour', e.target.value)}
+                      style={{ width: '36px', height: '36px', padding: 0, border: '2px solid var(--border)', borderRadius: '6px', flexShrink: 0, cursor: 'pointer', background: 'none' }} />
                     <input value={f('kit_primary_colour')} onChange={e => set('kit_primary_colour', e.target.value)} placeholder="#162a1f" style={{ fontFamily: 'DM Mono', fontSize: '14px' }} />
                   </div>
                 </FG>
                 <FG label="Kit Secondary">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '6px', border: '2px solid var(--border)', background: f('kit_secondary_colour') || '#e8ff47', flexShrink: 0 }} />
+                    <input type="color" value={f('kit_secondary_colour') || '#e8ff47'} onChange={e => set('kit_secondary_colour', e.target.value)}
+                      style={{ width: '36px', height: '36px', padding: 0, border: '2px solid var(--border)', borderRadius: '6px', flexShrink: 0, cursor: 'pointer', background: 'none' }} />
                     <input value={f('kit_secondary_colour')} onChange={e => set('kit_secondary_colour', e.target.value)} placeholder="#e8ff47" style={{ fontFamily: 'DM Mono', fontSize: '14px' }} />
                   </div>
                 </FG>
@@ -335,6 +348,20 @@ export default function SetupPage() {
                   <option value="friendly">Friendly</option>
                   <option value="trial">Trial</option>
                 </select>
+              </FG>
+              <FG label="League Level"><input value={f('league_level')} onChange={e => set('league_level', e.target.value)} placeholder="e.g. UAE Pro Division" /></FG>
+              <FG label="Default Match Playing Time">
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <select value={f('default_match_minutes_option')} onChange={e => set('default_match_minutes_option', e.target.value)} style={{ flex: 1 }}>
+                    <option value="">— none —</option>
+                    {MATCH_MIN_PRESETS.map(m => <option key={m} value={m}>{m} mins</option>)}
+                    <option value="custom">Custom</option>
+                  </select>
+                  {f('default_match_minutes_option') === 'custom' && (
+                    <input type="number" value={f('default_match_minutes_custom')} onChange={e => set('default_match_minutes_custom', e.target.value)} placeholder="mins" min="1" max="150" style={{ width: '90px', flex: 'none' }} />
+                  )}
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--muted)', fontFamily: 'DM Mono', marginTop: '6px' }}>Pre-fills &quot;Total Match Time&quot; when logging a match in this competition.</p>
               </FG>
               <FG label="Start Date">
                 <input type="date" value={f('start_date')} onChange={e => set('start_date', e.target.value)} />

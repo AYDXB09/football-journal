@@ -10,7 +10,7 @@ type MatchChips = { went_well: string[]; improve_next: string[]; key_moment: str
 
 type Season = { id: string; label: string; is_active: boolean }
 type Team = { id: string; team_label: string; season_id: string; format: string | null }
-type Competition = { id: string; name: string; team_id: string }
+type Competition = { id: string; name: string; team_id: string; default_match_minutes: number | null }
 type Teammate = { id: string; name: string; nickname: string | null; team_id: string }
 
 const POSITIONS = ['GK','CB','LB','RB','LWB','RWB','CDM','CM','CAM','LM','RM','LW','RW','SS','ST']
@@ -26,6 +26,11 @@ const DIMENSIONS: Record<string, { id: string; label: string; sub: string }[]> =
 
 type PosRow = { position: string; from: string; to: string }
 type VideoRow = { url: string; timestamp: string; label: string; type: string }
+
+function numOr(s: string, fallback: number) {
+  const n = parseInt(s, 10)
+  return Number.isNaN(n) ? fallback : n
+}
 
 function FG({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
   return <div style={{ gridColumn: full ? '1/-1' : undefined }}><label style={{ display: 'block', fontSize: '13px', fontFamily: 'DM Mono', letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '7px' }}>{label}</label>{children}</div>
@@ -71,8 +76,10 @@ export default function LogMatchPage() {
   const gf = parseInt(goalsFor) || 0
   const ga = parseInt(goalsAgainst) || 0
   const myGf = parseInt(myGoals) || 0
-  const [totalMins, setTotalMins] = useState(60)
-  const [minsPlayed, setMinsPlayed] = useState(60)
+  const [totalMins, setTotalMins] = useState('60')
+  const [minsPlayed, setMinsPlayed] = useState('60')
+  const totalMinsNum = numOr(totalMins, 60)
+  const minsPlayedNum = numOr(minsPlayed, 60)
   const [mood, setMood] = useState('')
   const [overallRating, setOverallRating] = useState(7)
 
@@ -111,7 +118,7 @@ export default function LogMatchPage() {
       const [sr, tr, cr, mr] = await Promise.all([
         supabase.from('seasons').select('id, label, is_active').eq('player_id', user.id).order('created_at', { ascending: false }),
         supabase.from('teams').select('id, team_label, season_id, format').eq('player_id', user.id),
-        supabase.from('competitions').select('id, name, team_id').eq('player_id', user.id),
+        supabase.from('competitions').select('id, name, team_id, default_match_minutes').eq('player_id', user.id),
         supabase.from('teammates').select('id, name, nickname, team_id').eq('player_id', user.id),
       ])
       const s = sr.data || []
@@ -150,6 +157,12 @@ export default function LogMatchPage() {
     setFilteredComps(competitions.filter(c => c.team_id === tid))
     const found = teams.find(t => t.id === tid)
     if (found?.format) setTeamFormat(found.format)
+  }
+
+  function onCompChange(cid: string) {
+    setCompId(cid)
+    const found = competitions.find(c => c.id === cid)
+    if (found?.default_match_minutes) setTotalMins(String(found.default_match_minutes))
   }
 
   function getDims() {
@@ -256,7 +269,7 @@ export default function LogMatchPage() {
     if (saved) return
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
     setAutoSaveStatus('')
-    const snap = { uid: userId, seasonId, teamId, compId, date, stage, opponent, venue, gf, ga, totalMins, minsPlayed, mood, overallRating, reflWell, reflImprove, reflMoment, reflCoach }
+    const snap = { uid: userId, seasonId, teamId, compId, date, stage, opponent, venue, gf, ga, totalMins: totalMinsNum, minsPlayed: minsPlayedNum, mood, overallRating, reflWell, reflImprove, reflMoment, reflCoach }
     autoSaveTimer.current = setTimeout(() => doAutoSave(snap), 2000)
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current) }
   }, [date, seasonId, teamId, compId, stage, opponent, venue, goalsFor, goalsAgainst, totalMins, minsPlayed, mood, overallRating, reflWell, reflImprove, reflMoment, reflCoach, userId, saved])
@@ -270,7 +283,7 @@ export default function LogMatchPage() {
     const matchPayload = {
       player_id: userId, season_id: seasonId, team_id: teamId,
       competition_id: compId || null, date, opponent, venue_type: venue as 'home',
-      stage: stage as 'friendly', total_match_minutes: totalMins, minutes_played: minsPlayed,
+      stage: stage as 'friendly', total_match_minutes: totalMinsNum, minutes_played: minsPlayedNum,
       goals_for: gf, goals_against: ga, result, mood: mood as 'good' || null, overall_rating: overallRating,
     }
 
@@ -378,7 +391,7 @@ export default function LogMatchPage() {
             <FG label="Date"><input type="date" value={date} onChange={e => setDate(e.target.value)} required /></FG>
             <FG label="Season"><select value={seasonId} onChange={e => setSeasonId(e.target.value)} required><option value="">— select —</option>{seasons.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}</select></FG>
             <FG label="Team"><select value={teamId} onChange={e => onTeamChange(e.target.value)} required><option value="">— select team —</option>{teams.map(t => <option key={t.id} value={t.id}>{t.team_label}</option>)}</select></FG>
-            <FG label="Competition"><select value={compId} onChange={e => setCompId(e.target.value)}><option value="">— select —</option>{filteredComps.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></FG>
+            <FG label="Competition"><select value={compId} onChange={e => onCompChange(e.target.value)}><option value="">— select —</option>{filteredComps.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></FG>
             <FG label="Stage"><select value={stage} onChange={e => setStage(e.target.value)}>{STAGES.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}</select></FG>
             <FG label="Venue"><select value={venue} onChange={e => setVenue(e.target.value)}><option value="home">Home</option><option value="away">Away</option><option value="neutral">Neutral</option></select></FG>
             <FG label="Opponent"><input value={opponent} onChange={e => setOpponent(e.target.value)} placeholder="e.g. Al Nasr Academy" required /></FG>
@@ -411,8 +424,8 @@ export default function LogMatchPage() {
                 )}
               </div>
             </FG>
-            <FG label="Total Match Time (mins)"><input type="number" value={totalMins} onChange={e => setTotalMins(parseInt(e.target.value) || 60)} min="10" max="120" /></FG>
-            <FG label="My Time Played (mins)"><input type="number" value={minsPlayed} onChange={e => setMinsPlayed(parseInt(e.target.value) || 60)} min="0" max="120" /></FG>
+            <FG label="Total Match Time (mins)"><input type="number" value={totalMins} onChange={e => setTotalMins(e.target.value)} min="10" max="120" /></FG>
+            <FG label="My Time Played (mins)"><input type="number" value={minsPlayed} onChange={e => setMinsPlayed(e.target.value)} min="0" max="120" /></FG>
           </div>
         </div>
 

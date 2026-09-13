@@ -216,6 +216,8 @@ export interface Database {
           player_id: string
           name: string
           type: 'league' | 'cup' | 'friendly' | 'trial' | 'tournament' | null
+          league_level: string | null
+          default_match_minutes: number | null
           start_date: string | null
           end_date: string | null
           notes: string | null
@@ -228,6 +230,8 @@ export interface Database {
           player_id: string
           name: string
           type?: 'league' | 'cup' | 'friendly' | 'trial' | 'tournament' | null
+          league_level?: string | null
+          default_match_minutes?: number | null
           start_date?: string | null
           end_date?: string | null
           notes?: string | null
@@ -235,6 +239,8 @@ export interface Database {
         Update: {
           name?: string
           type?: 'league' | 'cup' | 'friendly' | 'trial' | 'tournament' | null
+          league_level?: string | null
+          default_match_minutes?: number | null
           start_date?: string | null
           end_date?: string | null
           notes?: string | null

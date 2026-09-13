@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate, today, daysFromNow } from '@/lib/utils/format'
 
-type Season = { id: string; label: string; is_active: boolean }
+type Season = { id: string; label: string; is_active: boolean | null }
 type Team = { id: string; team_label: string }
 type Goal = { id: string; text: string; why: string | null; set_by: string | null; target_date: string | null; completed_at: string | null; visibility: string; teams?: { team_label: string } | null }
 

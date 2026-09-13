@@ -8,7 +8,7 @@ import { WordCloud } from '@/components/ui/WordCloud'
 type TrainingChips = { focus_areas: string[]; reflection_notes: string[] }
 
 type Team = { id: string; team_label: string }
-type Season = { id: string; label: string; is_active: boolean }
+type Season = { id: string; label: string; is_active: boolean | null }
 type Training = { id: string; date: string; duration_minutes: number | null; session_type: string | null; notes: string | null; rating: number | null; coach_led: boolean; teams?: { team_label: string } | null }
 
 const SESSION_TYPES = [

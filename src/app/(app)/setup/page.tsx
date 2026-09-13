@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { formatDate } from '@/lib/utils/format'
 
 // ── Types ──
-type Season = { id: string; label: string; start_date: string | null; end_date: string | null; is_active: boolean }
-type Club = { id: string; name: string; logo_url: string | null; has_professional_pathway: boolean }
+type Season = { id: string; label: string; start_date: string | null; end_date: string | null; is_active: boolean | null }
+type Club = { id: string; name: string; logo_url: string | null; has_professional_pathway: boolean | null }
 type Team = { id: string; team_label: string; age_group: string; club_id: string; season_id: string; kit_primary_colour: string | null; kit_secondary_colour: string | null; training_hours_per_week: number | null; league_level: string | null; format: string | null; clubs?: { name: string } | null; seasons?: { label: string } | null }
 type Competition = { id: string; name: string; type: string | null; team_id: string; league_level: string | null; default_match_minutes: number | null; teams?: { team_label: string } | null }
 const MATCH_MIN_PRESETS = ['60', '75', '90']
@@ -100,7 +100,7 @@ export default function SetupPage() {
         showToast('Club saved ✓')
       }
       if (modal === 'team') {
-        const p = { player_id: userId, club_id: f('club_id'), season_id: f('season_id'), age_group: f('age_group'), team_label: f('team_label'), kit_primary_colour: f('kit_primary_colour') || null, kit_secondary_colour: f('kit_secondary_colour') || null, format: f('format') || null }
+        const p = { player_id: userId, club_id: f('club_id'), season_id: f('season_id'), age_group: f('age_group'), team_label: f('team_label'), kit_primary_colour: f('kit_primary_colour') || null, kit_secondary_colour: f('kit_secondary_colour') || null, format: (f('format') || null) as '5v5' | '7v7' | '9v9' | '11v11' | null }
         editId ? await supabase.from('teams').update(p).eq('id', editId) : await supabase.from('teams').insert(p)
         showToast('Team saved ✓')
       }
@@ -114,7 +114,7 @@ export default function SetupPage() {
         } else if (minsOpt) {
           defaultMatchMinutes = parseInt(minsOpt, 10)
         }
-        const p = { player_id: userId, team_id: f('team_id'), season_id: teamSeasonId, name: f('name'), type: f('type') || null, league_level: f('league_level') || null, default_match_minutes: defaultMatchMinutes, start_date: f('start_date') || null, end_date: f('end_date') || null }
+        const p = { player_id: userId, team_id: f('team_id'), season_id: teamSeasonId, name: f('name'), type: (f('type') || null) as 'league' | 'cup' | 'friendly' | 'trial' | 'tournament' | null, league_level: f('league_level') || null, default_match_minutes: defaultMatchMinutes, start_date: f('start_date') || null, end_date: f('end_date') || null }
         editId ? await supabase.from('competitions').update(p).eq('id', editId) : await supabase.from('competitions').insert(p)
         showToast('Competition saved ✓')
       }

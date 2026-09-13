@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate } from '@/lib/utils/format'
 
-type Season = { id: string; label: string; is_active: boolean }
+type Season = { id: string; label: string; is_active: boolean | null }
 type Team = { id: string; team_label: string }
 type Match = {
   id: string; date: string; opponent: string; result: string | null; goals_for: number | null; goals_against: number | null;

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-type Season = { id: string; label: string; is_active: boolean }
+type Season = { id: string; label: string; is_active: boolean | null }
 type Team = { id: string; team_label: string; season_id: string }
 
 const SEASON_DIMS = [

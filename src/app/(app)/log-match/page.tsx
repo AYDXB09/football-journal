@@ -8,7 +8,7 @@ import GoalContributionCard, { type GoalState } from '@/components/GoalContribut
 
 type MatchChips = { went_well: string[]; improve_next: string[]; key_moment: string[]; coach_feedback: string[] }
 
-type Season = { id: string; label: string; is_active: boolean }
+type Season = { id: string; label: string; is_active: boolean | null }
 type Team = { id: string; team_label: string; season_id: string; format: string | null }
 type Competition = { id: string; name: string; team_id: string; default_match_minutes: number | null }
 type Teammate = { id: string; name: string; nickname: string | null; team_id: string }
@@ -187,7 +187,7 @@ export default function LogMatchPage() {
   function removeVideoRow(i: number) { setVideoRows(prev => prev.filter((_, idx) => idx !== i)) }
   function updateVideoRow(i: number, field: keyof VideoRow, val: string) { setVideoRows(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r)) }
 
-  function calcResult() {
+  function calcResult(): 'W' | 'D' | 'L' {
     if (gf > ga) return 'W'
     if (gf < ga) return 'L'
     return 'D'
@@ -233,7 +233,7 @@ export default function LogMatchPage() {
   }) => {
     if (!snap.opponent || !snap.seasonId || !snap.teamId) return
     setAutoSaveStatus('saving')
-    const result = snap.gf > snap.ga ? 'W' : snap.gf < snap.ga ? 'L' : 'D'
+    const result: 'W' | 'D' | 'L' = snap.gf > snap.ga ? 'W' : snap.gf < snap.ga ? 'L' : 'D'
     const matchPayload = {
       player_id: snap.uid, season_id: snap.seasonId, team_id: snap.teamId,
       competition_id: snap.compId || null, date: snap.date, opponent: snap.opponent,

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { today, formatDate } from '@/lib/utils/format'
 
-type Season = { id: string; label: string; is_active: boolean }
+type Season = { id: string; label: string; is_active: boolean | null }
 
 const CATEGORIES = [
   { title: 'Technical — Ball Control & Passing', color: '#5ac8fa', questions: ['I decide what to do with the ball before it reaches me', 'My passes go exactly where I want them to go', 'I control the ball quickly when it arrives under pressure', 'I use my weaker foot comfortably, not just my stronger one', 'I can play a 1-2 and use overlaps during a game'] },

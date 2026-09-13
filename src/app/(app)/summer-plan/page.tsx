@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-type Season = { id: string; label: string; is_active: boolean }
+type Season = { id: string; label: string; is_active: boolean | null }
 type SkillRow = { skill: string; freq: number }
 
 function FG({ label, children }: { label: string; children: React.ReactNode }) {

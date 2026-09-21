@@ -36,7 +36,7 @@ The Service has four roles: **Player**, **Parent**, **Coach**, and **Admin**.
 - You're responsible for keeping your own account credentials secure, and for the accuracy of
   information you enter — including information about other people, covered in Section 4 below.
 
-## 3. The AI Coach — On by Default, Toggleable
+## 3. The AI Coach — Experimental, On by Default, Toggleable
 
 Match reflections, season reviews, and summer plans can be sent to an AI coaching feature that
 returns coach-voice feedback. Unlike a bring-your-own-key tool, **this happens server-side using
@@ -46,6 +46,12 @@ feature can be turned off** in Setup → Preferences — when off, the Service's
 request rather than just hiding the button, so no reflection content is sent to Gemini at all while
 it's disabled. AI feedback is a supportive tool, not professional coaching advice, and may be
 wrong, generic, or miss context a real coach would catch.
+
+**This feature is experimental.** It is not a core, permanent part of the Service, and the operator
+may change, limit, or remove it entirely — for any reason, including cost, reliability, or a
+change in AI provider — without that being treated as a reduction in the Service you're otherwise
+entitled to. If the AI coach is removed, existing AI feedback text already saved on your past
+entries is not affected, but no new feedback will be generated.
 
 ## 4. Entering Information About Teammates
 

@@ -66,7 +66,7 @@ UI:
 A reflection or goal marked `player_only` is never returned to a parent or coach's queries, at the
 database level.
 
-## 4. AI Processing (Google Gemini) — On by Default, Toggleable
+## 4. AI Processing (Google Gemini) — Experimental, On by Default, Toggleable
 
 When you save a match reflection, season review, or summer plan, the structured data (position,
 ratings, result) plus your free-text reflection is sent to **Google's Gemini API** to generate
@@ -79,6 +79,12 @@ their end.
 off, the Service's own servers reject the request server-side — no reflection content reaches
 Gemini while the setting is off. It's on by default, matching how the feature has always worked;
 turning it off is an active choice you (or your parent, on your behalf) can make at any time.
+
+**This feature is experimental and may be removed.** Because it depends on a third-party AI
+provider outside this Service's control, the operator may discontinue AI processing entirely at
+any time — at which point no further reflection content would be sent to Gemini or any other AI
+provider, for anyone, regardless of individual toggle settings. AI feedback text already saved on
+past entries would not be deleted by this, only future feedback generation would stop.
 
 ## 5. Children's Privacy and Parental Consent
 

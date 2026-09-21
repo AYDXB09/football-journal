@@ -39,4 +39,11 @@ begin
 end;
 $$;
 
+-- Postgres grants EXECUTE to PUBLIC (including anon) on function creation by
+-- default unless a database-level default-privilege override says otherwise.
+-- The function's own auth.uid()-is-null check already blocks an actual
+-- unauthenticated deletion, but a destructive RPC has no business being
+-- callable at all by anon -- revoke explicitly rather than rely on that.
+revoke execute on function public.delete_own_account() from public;
+revoke execute on function public.delete_own_account() from anon;
 grant execute on function public.delete_own_account() to authenticated;

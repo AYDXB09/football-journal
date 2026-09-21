@@ -106,4 +106,4 @@ principles.
 ## 11. Contact
 
 Questions about these Terms should be directed to the person who set up your account, or to the
-Service operator at **[operator email — to be filled in]**.
+Service operator at **nry76@hotmail.com**.

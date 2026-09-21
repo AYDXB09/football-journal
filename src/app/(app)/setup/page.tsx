@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate } from '@/lib/utils/format'
 
@@ -46,6 +47,7 @@ function FG({ label, children }: { label: string; children: React.ReactNode }) {
 
 export default function SetupPage() {
   const supabase = createClient()
+  const router = useRouter()
   const [userId, setUserId] = useState<string | null>(null)
   const [seasons, setSeasons] = useState<Season[]>([])
   const [clubs, setClubs] = useState<Club[]>([])
@@ -58,8 +60,30 @@ export default function SetupPage() {
   const [toast, setToast] = useState('')
   const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState<Record<string, string>>({})
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
+
+  async function handleDeleteAccount() {
+    setDeleting(true)
+    setDeleteError(null)
+    // A SECURITY DEFINER RPC scoped to auth.uid() — clears the NO ACTION FKs
+    // (matches.competition_id, training_sessions.team_id, goals.team_id,
+    // player_photos.season_id) explicitly, then the users row (cascades
+    // everywhere else), then the actual auth.users row so the account is
+    // genuinely gone, not just orphaned.
+    const { error } = await supabase.rpc('delete_own_account')
+    if (error) {
+      setDeleteError(error.message || 'Failed to delete account.')
+      setDeleting(false)
+      return
+    }
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
 
   const load = useCallback(async (uid: string) => {
     const [s, c, t, comp, mate, profile] = await Promise.all([
@@ -299,6 +323,39 @@ export default function SetupPage() {
             }} />
           </button>
         </div>
+      </div>
+
+      {/* Danger zone */}
+      <div style={{ ...card, border: '1px solid var(--danger)' }}>
+        <div style={{ fontFamily: 'Bebas Neue', fontSize: '18px', letterSpacing: '1.5px', color: 'var(--danger)' }}>
+          ⚠️ Danger zone
+        </div>
+        <p style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '10px' }}>
+          Permanently deletes your account and everything tied to it — seasons, clubs, teams,
+          matches, reflections, diagnostics, goals, and photos. This can&apos;t be undone.
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '13px', fontFamily: 'DM Mono', color: 'var(--muted)' }}>Type DELETE to confirm</span>
+          <input
+            value={deleteConfirmText}
+            onChange={e => setDeleteConfirmText(e.target.value)}
+            disabled={deleting}
+            placeholder="DELETE"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--white)', borderRadius: '6px', padding: '8px 10px', fontFamily: 'DM Mono', fontSize: '13px', width: '120px' }}
+          />
+        </div>
+        {deleteError && <p style={{ color: 'var(--danger)', fontSize: '12.5px', marginTop: '8px' }}>{deleteError}</p>}
+        <button
+          onClick={() => void handleDeleteAccount()}
+          disabled={deleteConfirmText !== 'DELETE' || deleting}
+          style={{
+            marginTop: '12px', background: 'transparent', border: '1px solid var(--danger)', color: 'var(--danger)',
+            padding: '9px 16px', borderRadius: '6px', cursor: deleteConfirmText !== 'DELETE' || deleting ? 'not-allowed' : 'pointer',
+            opacity: deleteConfirmText !== 'DELETE' || deleting ? 0.5 : 1, fontFamily: 'DM Mono', fontSize: '13px',
+          }}
+        >
+          {deleting ? 'Deleting…' : 'Delete my account'}
+        </button>
       </div>
 
       {/* Modal */}

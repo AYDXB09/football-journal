@@ -107,9 +107,11 @@ including children well under 13. Because of that:
 
 ## 6. Data Retention and Deletion
 
-Data is retained for as long as the account exists. To request deletion of a player's account and
-all associated data (matches, reflections, photos, diagnostics, goals — deletion cascades through
-the database), contact the Service operator at **[operator email — to be filled in]**.
+Data is retained for as long as the account exists. A player can permanently delete their own
+account and all associated data (matches, reflections, photos, diagnostics, goals — deletion
+cascades through the database) at any time from **Setup → Danger zone**. This is immediate and
+cannot be undone. If a parent or guardian wants to request deletion of a player's account on the
+player's behalf, contact the Service operator at **nry76@hotmail.com**.
 
 ## 7. Security
 
@@ -121,8 +123,8 @@ unauthenticated requests.
 
 - A player can mark any reflection or goal `player_only` to keep it out of parent/coach view.
 - A player can turn AI Coach Feedback on or off at any time in Setup → Preferences.
-- A parent or player can request a data export or account deletion at any time via the contact
-  below.
+- A player can delete their own account at any time in Setup → Danger zone. A parent can request
+  deletion on a player's behalf, or request a data export, via the contact below.
 
 ## 9. Changes to This Policy
 
@@ -131,4 +133,4 @@ If this policy changes in a meaningful way, the "Last updated" date above will r
 ## 10. Contact
 
 Questions about this policy, or a request to access, correct, or delete data — especially a child's
-data — should go to **[operator email — to be filled in]**.
+data — should go to **nry76@hotmail.com**.

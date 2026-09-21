@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { callGemini } from '@/lib/utils/gemini'
+import { blockIfAiCoachDisabled } from '@/lib/utils/aiGate'
 
 export async function POST(request: Request) {
+  const blocked = await blockIfAiCoachDisabled()
+  if (blocked) return blocked
+
   try {
     const body = await request.json()
     const { opponent, result, position, overall_rating, went_well, improve_next, key_moment, coach_feedback, ratings } = body

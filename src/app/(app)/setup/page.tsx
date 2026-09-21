@@ -52,6 +52,7 @@ export default function SetupPage() {
   const [teams, setTeams] = useState<Team[]>([])
   const [competitions, setCompetitions] = useState<Competition[]>([])
   const [teammates, setTeammates] = useState<Teammate[]>([])
+  const [aiCoachEnabled, setAiCoachEnabled] = useState(true)
   const [modal, setModal] = useState<ModalType>(null)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState('')
@@ -61,19 +62,35 @@ export default function SetupPage() {
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const load = useCallback(async (uid: string) => {
-    const [s, c, t, comp, mate] = await Promise.all([
+    const [s, c, t, comp, mate, profile] = await Promise.all([
       supabase.from('seasons').select('*').eq('player_id', uid).order('created_at', { ascending: false }),
       supabase.from('clubs').select('*').eq('player_id', uid).order('created_at', { ascending: false }),
       supabase.from('teams').select('*, clubs(name), seasons(label)').eq('player_id', uid).order('created_at', { ascending: false }),
       supabase.from('competitions').select('*, teams(team_label)').eq('player_id', uid).order('created_at', { ascending: false }),
       supabase.from('teammates').select('*, teams(team_label)').eq('player_id', uid).order('created_at', { ascending: false }),
+      supabase.from('player_profiles').select('ai_coach_enabled').eq('user_id', uid).maybeSingle(),
     ])
     setSeasons(s.data || [])
     setClubs(c.data || [])
     setTeams(t.data as Team[] || [])
     setCompetitions(comp.data as Competition[] || [])
     setTeammates(mate.data as Teammate[] || [])
+    // No player_profiles row yet is normal — signup only creates `users`,
+    // not `player_profiles` — so default to the column's own true default.
+    setAiCoachEnabled(profile.data?.ai_coach_enabled ?? true)
   }, [supabase])
+
+  async function toggleAiCoach(next: boolean) {
+    if (!userId) return
+    setAiCoachEnabled(next)
+    const { error } = await supabase
+      .from('player_profiles')
+      .upsert({ user_id: userId, ai_coach_enabled: next }, { onConflict: 'user_id' })
+    if (error) {
+      setAiCoachEnabled(!next)
+      showToast('Failed to save — try again')
+    }
+  }
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -250,6 +267,38 @@ export default function SetupPage() {
               onEdit={() => openModal('teammate', { name: m.name, nickname: m.nickname || '', kit_number: String(m.kit_number || ''), positions: (m.positions || []).join(', '), team_id: m.team_id }, m.id)}
               onDel={() => handleDelete('teammates', m.id)} />
           ))}
+      </div>
+
+      <div style={{ textAlign: 'center', color: 'var(--muted)', fontSize: '20px', margin: '4px 0' }}>↓</div>
+
+      {/* Preferences */}
+      <div style={card}>
+        <div style={{ fontFamily: 'Bebas Neue', fontSize: '18px', letterSpacing: '1.5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          🤖 Preferences
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '14px' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '16px', fontWeight: 600 }}>AI Coach Feedback</div>
+            <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '2px' }}>
+              When on, match reflections, season reviews, and summer plans get AI coach-voice
+              feedback (sent to Google Gemini to generate it). Turn off to skip this entirely.
+            </div>
+          </div>
+          <button
+            onClick={() => toggleAiCoach(!aiCoachEnabled)}
+            style={{
+              flex: 'none', width: '52px', height: '30px', borderRadius: '15px', border: 'none', cursor: 'pointer',
+              background: aiCoachEnabled ? 'var(--accent)' : 'var(--border)', position: 'relative', transition: 'background 0.15s',
+            }}
+            aria-pressed={aiCoachEnabled}
+            aria-label="Toggle AI coach feedback"
+          >
+            <span style={{
+              position: 'absolute', top: '3px', left: aiCoachEnabled ? '25px' : '3px', width: '24px', height: '24px',
+              borderRadius: '50%', background: 'var(--surface)', transition: 'left 0.15s',
+            }} />
+          </button>
+        </div>
       </div>
 
       {/* Modal */}

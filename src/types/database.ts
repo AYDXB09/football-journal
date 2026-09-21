@@ -48,6 +48,11 @@ export interface Database {
           phone: string | null
           instagram_handle: string | null
           bio: string | null
+          ai_coach_enabled: boolean
+          is_minor: boolean | null
+          guardian_name: string | null
+          guardian_email: string | null
+          consent_given_at: string | null
           created_at: string | null
         }
         Insert: {
@@ -61,6 +66,11 @@ export interface Database {
           phone?: string | null
           instagram_handle?: string | null
           bio?: string | null
+          ai_coach_enabled?: boolean
+          is_minor?: boolean | null
+          guardian_name?: string | null
+          guardian_email?: string | null
+          consent_given_at?: string | null
           created_at?: string | null
         }
         Update: {
@@ -74,6 +84,11 @@ export interface Database {
           phone?: string | null
           instagram_handle?: string | null
           bio?: string | null
+          ai_coach_enabled?: boolean
+          is_minor?: boolean | null
+          guardian_name?: string | null
+          guardian_email?: string | null
+          consent_given_at?: string | null
           created_at?: string | null
         }
         Relationships: [
@@ -254,9 +269,6 @@ export interface Database {
           nickname: string | null
           positions: string[] | null
           kit_number: number | null
-          phone: string | null
-          email: string | null
-          instagram_handle: string | null
           notes: string | null
           created_at: string | null
         }
@@ -269,9 +281,6 @@ export interface Database {
           nickname?: string | null
           positions?: string[] | null
           kit_number?: number | null
-          phone?: string | null
-          email?: string | null
-          instagram_handle?: string | null
           notes?: string | null
           created_at?: string | null
         }
@@ -284,9 +293,6 @@ export interface Database {
           nickname?: string | null
           positions?: string[] | null
           kit_number?: number | null
-          phone?: string | null
-          email?: string | null
-          instagram_handle?: string | null
           notes?: string | null
           created_at?: string | null
         }

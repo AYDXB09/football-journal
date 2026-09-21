@@ -11,20 +11,54 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<'player' | 'parent' | 'coach'>('player')
+  const [ageStatus, setAgeStatus] = useState<'adult' | 'minor' | ''>('')
+  const [guardianName, setGuardianName] = useState('')
+  const [guardianEmail, setGuardianEmail] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const isMinor = ageStatus === 'minor'
+
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
     setError('')
+
+    // This Service is built around youth players, some well under 13 — a
+    // flat "you must be 13+" gate would exclude the actual target users.
+    // Instead: a Player account must say whether the player is under 18,
+    // and if so, name a parent/guardian who's consenting on their behalf.
+    // This isn't verified (no confirmation email loop to the guardian) —
+    // it's an explicit record of what was asserted at signup, not a
+    // hardened verified-consent flow. See docs/PRIVACY.md.
+    if (role === 'player') {
+      if (!ageStatus) {
+        setError('Please confirm whether this player is under 18.')
+        return
+      }
+      if (isMinor && (!guardianName.trim() || !guardianEmail.trim())) {
+        setError("Please enter the parent or guardian's name and email.")
+        return
+      }
+    }
+
+    setLoading(true)
 
     const supabase = createClient()
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name, role },
+        data: {
+          name,
+          role,
+          ...(role === 'player'
+            ? {
+                is_minor: isMinor,
+                guardian_name: isMinor ? guardianName.trim() : null,
+                guardian_email: isMinor ? guardianEmail.trim() : null,
+              }
+            : {}),
+        },
         emailRedirectTo: `${window.location.origin}/api/auth/callback`,
       },
     })
@@ -79,6 +113,51 @@ export default function SignupPage() {
                 <option value="coach">Coach</option>
               </select>
             </div>
+
+            {role === 'player' && (
+              <div
+                className="flex flex-col gap-2"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px' }}
+              >
+                <label style={{ fontSize: '13px', fontFamily: 'DM Mono', letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)' }}>
+                  Is this player under 18?
+                </label>
+                <select value={ageStatus} onChange={e => setAgeStatus(e.target.value as typeof ageStatus)} required>
+                  <option value="" disabled>Select one...</option>
+                  <option value="adult">No — 18 or older</option>
+                  <option value="minor">Yes — under 18</option>
+                </select>
+
+                {isMinor && (
+                  <>
+                    <p style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>
+                      A parent or guardian must consent to this account. If you&apos;re the player,
+                      have a parent or guardian fill in the two fields below.
+                    </p>
+                    <label style={{ fontSize: '13px', fontFamily: 'DM Mono', letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '6px' }}>
+                      Parent/Guardian Name
+                    </label>
+                    <input
+                      type="text"
+                      value={guardianName}
+                      onChange={e => setGuardianName(e.target.value)}
+                      placeholder="e.g. Fatima Al Rashid"
+                      required
+                    />
+                    <label style={{ fontSize: '13px', fontFamily: 'DM Mono', letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '6px' }}>
+                      Parent/Guardian Email
+                    </label>
+                    <input
+                      type="email"
+                      value={guardianEmail}
+                      onChange={e => setGuardianEmail(e.target.value)}
+                      placeholder="parent@email.com"
+                      required
+                    />
+                  </>
+                )}
+              </div>
+            )}
 
             <div className="flex flex-col gap-2">
               <label style={{ fontSize: '13px', fontFamily: 'DM Mono', letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)' }}>

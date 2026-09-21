@@ -1,0 +1,24 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "football-journal",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "goal-picker-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "/tmp/goal-picker-preview", "-p", "4321", "--no-clipboard"],
+      "port": 4321
+    }
+  ,
+    {
+      "name": "goal-picker-sketch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "/tmp/goal-picker-sketch", "-p", "4322", "--no-clipboard"],
+      "port": 4322
+    }
+  ]
+}

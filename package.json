@@ -9,10 +9,9 @@
     "lint": "next lint"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Anvith Yalamanchili",
+  "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.100.1",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",
     "@tailwindcss/postcss": "^4.3.0",

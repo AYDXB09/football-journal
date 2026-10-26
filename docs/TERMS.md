@@ -64,12 +64,9 @@ does not get their own account or visibility into this data through this feature
 ## 5. What Parental Consent at Signup Actually Covers
 
 If a Player account is created for someone under 18, the signup form requires a parent/guardian's
-name and email before the account exists. **Be clear about what this is and isn't:** it's an
-explicit record of what was asserted at that moment — it does not verify that the email actually
-belongs to the named guardian, and there is no confirmation step sent to that address. It is
-meaningfully better than no consent step at all, but it is not the same as a verified-consent
-system. If verified consent becomes a requirement for you, treat this as a starting point, not a
-finished compliance solution.
+name and email before the account exists. This is a recorded statement made at the moment of signup. It does not verify that the email
+address actually belongs to the named guardian, and no confirmation is sent to that address, so it
+is not a verified-consent system.
 
 ## 6. Acceptable Use
 
